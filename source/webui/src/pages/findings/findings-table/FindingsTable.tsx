@@ -7,7 +7,7 @@ import CollectionPreferences, {
 } from '@cloudscape-design/components/collection-preferences';
 import Header from '@cloudscape-design/components/header';
 import PropertyFilter, { PropertyFilterProps } from '@cloudscape-design/components/property-filter';
-import Table from '@cloudscape-design/components/table';
+import Table, { TableProps } from '@cloudscape-design/components/table';
 
 import Alert from '@cloudscape-design/components/alert';
 import Box from '@cloudscape-design/components/box';
@@ -16,45 +16,50 @@ import Modal from '@cloudscape-design/components/modal';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Spinner from '@cloudscape-design/components/spinner';
 import Toggle from '@cloudscape-design/components/toggle';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { findingsTablePreferences } from '../../../utils/tablePreferences.ts';
 import { ActionsDropdown } from '../../../components/ActionsDropdown.tsx';
 import { EmptyTableState } from '../../../components/EmptyTableState.tsx';
 import { FindingApiResponse } from '@data-models';
 import {
   useExecuteActionMutation,
   useExportFindingsMutation,
-  useLazySearchFindingsQuery
+  useLazySearchFindingsQuery,
 } from '../../../store/findingsApiSlice.ts';
 import { CompositeFilter, SearchRequest, StringFilter } from '../../../store/types.ts';
 import { getErrorMessage } from '../../../utils/error.ts';
-import { createColumnDefinitions } from './createColumnDefinitions.tsx';
+import { createColumnDefinitions, DEFAULT_VISIBLE_COLUMNS } from './createColumnDefinitions.tsx';
 
 const getFilterCounterText = (count = 0) => `${count} ${count === 1 ? 'match' : 'matches'}`;
-const getHeaderCounterText = (items: readonly FindingApiResponse[] = [], selectedItems: readonly FindingApiResponse[] = []) => {
-  return selectedItems && selectedItems.length > 0 ? `(${selectedItems.length}/${items.length})` : `(${items.length})`;
-};
-
-export interface FindingsTableProps {
-}
 
 export default function FindingsTable() {
   const navigate = useNavigate();
-  useDispatch();
+  const persistedPreferences = findingsTablePreferences.load();
 
   // State management
-  const [preferences, setPreferences] = useState<CollectionPreferencesProps['preferences']>({
-    wrapLines: true,
-    stripedRows: false,
-    contentDensity: 'comfortable',
+  const [preferences, setPreferences] = useState<CollectionPreferencesProps['preferences']>(() => {
+    const visibleContent =
+      persistedPreferences.visibleContent ||
+      (persistedPreferences.showSuppressed ? [...DEFAULT_VISIBLE_COLUMNS, 'suppressed'] : [...DEFAULT_VISIBLE_COLUMNS]);
+
+    return {
+      wrapLines: true,
+      stripedRows: false,
+      contentDensity: 'comfortable',
+      visibleContent,
+    };
   });
   const [selectedItems, setSelectedItems] = useState<FindingApiResponse[]>([]);
-  const [sortingColumn, setSortingColumn] = useState(() => {
+  const [sortingColumn, setSortingColumn] = useState<TableProps.SortingColumn<FindingApiResponse>>(() => {
     const columns = createColumnDefinitions(navigate);
-    return columns.find(col => col.sortingField === 'securityHubUpdatedAtTime')!;
+    return (
+      columns.find((col) => col.sortingField === persistedPreferences.sortingField) ??
+      columns.find((col) => col.sortingField === 'securityHubUpdatedAtTime') ??
+      columns[0] // Fallback to first column (columns array is never empty)
+    );
   });
-  const [sortingDescending, setSortingDescending] = useState(true);
-  const [filterTokens, setFilterTokens] = useState<PropertyFilterProps.Token[]>([]);
+  const [sortingDescending, setSortingDescending] = useState(persistedPreferences.sortingDescending);
+  const [filterTokens, setFilterTokens] = useState<PropertyFilterProps.Token[]>(persistedPreferences.filterTokens);
   const [filterOperation, setFilterOperation] = useState<'and' | 'or'>('and');
 
   const [allFindings, setAllFindings] = useState<FindingApiResponse[]>([]);
@@ -62,7 +67,7 @@ export default function FindingsTable() {
   const [hasMoreData, setHasMoreData] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [operationType, setOperationType] = useState<'initial' | 'refresh' | 'filter' | 'loadMore'>('initial');
-  const [showSuppressed, setShowSuppressed] = useState(false);
+  const [showSuppressed, setShowSuppressed] = useState(persistedPreferences.showSuppressed);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
@@ -99,12 +104,12 @@ export default function FindingsTable() {
   const unformatStatus = (formattedStatus: string) => {
     // Convert formatted status back to uppercase with underscores for API call
     const statusMap: { [key: string]: string } = {
-      'Success': 'SUCCESS',
-      'Failed': 'FAILED',
+      Success: 'SUCCESS',
+      Failed: 'FAILED',
       'Not Started': 'NOT_STARTED',
-      'In Progress': 'IN_PROGRESS'
+      'In Progress': 'IN_PROGRESS',
     };
-    
+
     return statusMap[formattedStatus] || formattedStatus.toUpperCase().replace(/\s+/g, '_');
   };
 
@@ -113,9 +118,9 @@ export default function FindingsTable() {
 
     const fieldGroups: { [fieldName: string]: StringFilter[] } = {};
 
-    tokens.forEach(token => {
+    tokens.forEach((token) => {
       const comparison = getComparisonOperator(token.operator || '=');
-      
+
       // Convert formatted remediation status values back to raw values for API
       let filterValue = token.value || '';
       if (token.propertyKey === 'remediationStatus') {
@@ -156,10 +161,12 @@ export default function FindingsTable() {
 
     const request: SearchRequest = {
       Filters: filters,
-      SortCriteria: [{
-        Field: sortingColumn.sortingField || 'securityHubUpdatedAtTime',
-        SortOrder: sortingDescending ? 'desc' : 'asc',
-      }],
+      SortCriteria: [
+        {
+          Field: sortingColumn?.sortingField || 'securityHubUpdatedAtTime',
+          SortOrder: sortingDescending ? 'desc' : 'asc',
+        },
+      ],
     };
 
     // Add NextToken for loading more data
@@ -183,7 +190,7 @@ export default function FindingsTable() {
     setAllFindings([]);
     setNextToken(undefined);
     setHasMoreData(false);
-    
+
     const searchRequest = buildSearchRequest(false);
     searchFindings(searchRequest);
   }, [filterTokens, filterOperation, sortingColumn, sortingDescending]);
@@ -192,9 +199,9 @@ export default function FindingsTable() {
   useEffect(() => {
     if (searchResult) {
       if (operationType === 'loadMore') {
-        setAllFindings(prev => {
-          const existingIds = new Set(prev.map(f => f.findingId));
-          const newFindings = searchResult.Findings.filter(f => !existingIds.has(f.findingId));
+        setAllFindings((prev) => {
+          const existingIds = new Set(prev.map((f) => f.findingId));
+          const newFindings = searchResult.Findings.filter((f) => !existingIds.has(f.findingId));
           return [...prev, ...newFindings];
         });
         setIsLoadingMore(false);
@@ -205,7 +212,7 @@ export default function FindingsTable() {
 
       setNextToken(searchResult.NextToken);
       setHasMoreData(!!searchResult.NextToken);
-      
+
       // Clear any previous search errors on successful response
       setErrorMessage(null);
 
@@ -241,12 +248,11 @@ export default function FindingsTable() {
     if (!Array.isArray(allFindings)) {
       return [];
     }
-    
 
     if (showSuppressed) {
       return allFindings;
     } else {
-      return allFindings.filter(finding => !finding.suppressed);
+      return allFindings.filter((finding) => !finding.suppressed);
     }
   }, [allFindings, showSuppressed]);
 
@@ -255,78 +261,67 @@ export default function FindingsTable() {
       key: 'findingType',
       operators: ['=', '!=', ':', '!:'],
       propertyLabel: 'Finding Type',
-      groupValuesLabel: 'Finding Type values'
+      groupValuesLabel: 'Finding Type values',
     },
     {
       key: 'accountId',
       operators: ['=', '!=', ':', '!:'],
       propertyLabel: 'Account',
-      groupValuesLabel: 'Account values'
+      groupValuesLabel: 'Account values',
     },
     {
       key: 'remediationStatus',
       operators: ['=', '!='],
       propertyLabel: 'Remediation Status',
-      groupValuesLabel: 'Remediation Status values'
+      groupValuesLabel: 'Remediation Status values',
     },
     {
       key: 'findingId',
       operators: ['='],
       propertyLabel: 'Finding ID',
-      groupValuesLabel: 'Finding ID values'
+      groupValuesLabel: 'Finding ID values',
     },
     {
       key: 'resourceType',
       operators: ['=', '!=', ':', '!:'],
       propertyLabel: 'Resource Type',
-      groupValuesLabel: 'Resource Type values'
+      groupValuesLabel: 'Resource Type values',
     },
     {
       key: 'resourceId',
       operators: ['=', '!=', ':', '!:'],
       propertyLabel: 'Resource ID',
-      groupValuesLabel: 'Resource ID values'
+      groupValuesLabel: 'Resource ID values',
     },
     {
       key: 'severity',
       operators: ['=', '!='],
       propertyLabel: 'Severity',
-      groupValuesLabel: 'Severity values'
-    }
+      groupValuesLabel: 'Severity values',
+    },
   ];
 
   const filteringOptions = useMemo(() => {
     const options: { propertyKey: string; value: string }[] = [];
     const uniqueValues = new Set<string>();
 
-    const remediationStatusOptions = [
-      'Success',
-      'Failed', 
-      'Not Started',
-      'In Progress'
-    ];
-    
-    remediationStatusOptions.forEach(status => {
+    const remediationStatusOptions = ['Success', 'Failed', 'Not Started', 'In Progress'];
+
+    remediationStatusOptions.forEach((status) => {
       options.push({ propertyKey: 'remediationStatus', value: status });
     });
 
-    const severityOptions = [
-      'INFORMATIONAL',
-      'LOW',
-      'MEDIUM', 
-      'HIGH',
-      'CRITICAL'
-    ];
-    
-    severityOptions.forEach(severity => {
+    const severityOptions = ['INFORMATIONAL', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+
+    severityOptions.forEach((severity) => {
       options.push({ propertyKey: 'severity', value: severity });
     });
 
-    findings.forEach(finding => {
-      filteringProperties.forEach(prop => {
+    findings.forEach((finding) => {
+      filteringProperties.forEach((prop) => {
         // Skip remediationStatus and severity as we're using fixed values
         if (prop.key === 'remediationStatus' || prop.key === 'severity') return;
-        
+
         const value = finding[prop.key as keyof FindingApiResponse];
         if (value && !uniqueValues.has(`${prop.key}:${value}`)) {
           uniqueValues.add(`${prop.key}:${value}`);
@@ -345,29 +340,64 @@ export default function FindingsTable() {
     preferences: {
       ...preferences,
       contentDisplay: [
-        { id: 'findingType', label: 'Finding Type', visible: preferences?.visibleContent?.includes('findingType') ?? true },
-        { id: 'findingDescription', label: 'Finding Title', visible: preferences?.visibleContent?.includes('findingDescription') ?? true },
-        { id: 'remediationStatus', label: 'Remediation Status', visible: preferences?.visibleContent?.includes('remediationStatus') ?? true },
+        {
+          id: 'findingType',
+          label: 'Finding Type',
+          visible: preferences?.visibleContent?.includes('findingType') ?? true,
+        },
+        {
+          id: 'findingDescription',
+          label: 'Finding Title',
+          visible: preferences?.visibleContent?.includes('findingDescription') ?? true,
+        },
+        {
+          id: 'remediationStatus',
+          label: 'Remediation Status',
+          visible: preferences?.visibleContent?.includes('remediationStatus') ?? true,
+        },
         { id: 'accountId', label: 'Account', visible: preferences?.visibleContent?.includes('accountId') ?? true },
         { id: 'findingId', label: 'Finding ID', visible: preferences?.visibleContent?.includes('findingId') ?? true },
-        { id: 'resourceType', label: 'Resource Type', visible: preferences?.visibleContent?.includes('resourceType') ?? true },
-        { id: 'resourceId', label: 'Resource ID', visible: preferences?.visibleContent?.includes('resourceId') ?? true },
+        {
+          id: 'resourceType',
+          label: 'Resource Type',
+          visible: preferences?.visibleContent?.includes('resourceType') ?? true,
+        },
+        {
+          id: 'resourceId',
+          label: 'Resource ID',
+          visible: preferences?.visibleContent?.includes('resourceId') ?? true,
+        },
         { id: 'severity', label: 'Severity', visible: preferences?.visibleContent?.includes('severity') ?? true },
-        { id: 'securityHubUpdatedAtTime', label: 'Security Hub Updated Time', visible: preferences?.visibleContent?.includes('securityHubUpdatedAtTime') ?? true },
-        { id: 'consoleLink', label: 'Finding Link', visible: preferences?.visibleContent?.includes('consoleLink') ?? true },
-        ...(showSuppressed ? [{ id: 'suppressed', label: 'Suppressed', visible: preferences?.visibleContent?.includes('suppressed') ?? true }] : []),
+        {
+          id: 'securityHubUpdatedAtTime',
+          label: 'Security Hub Updated Time',
+          visible: preferences?.visibleContent?.includes('securityHubUpdatedAtTime') ?? true,
+        },
+        {
+          id: 'consoleLink',
+          label: 'Finding Link',
+          visible: preferences?.visibleContent?.includes('consoleLink') ?? true,
+        },
+        ...(showSuppressed
+          ? [
+              {
+                id: 'suppressed',
+                label: 'Suppressed',
+                visible: preferences?.visibleContent?.includes('suppressed') ?? true,
+              },
+            ]
+          : []),
       ],
     },
-    onConfirm: ({ detail }: any) => {
+    onConfirm: ({ detail }: { detail: CollectionPreferencesProps.Preferences }) => {
       // Convert contentDisplay array to visibleContent array
-      const visibleContent = detail.contentDisplay
-        .filter((item: any) => item.visible)
-        .map((item: any) => item.id);
+      const visibleContent = detail.contentDisplay?.filter((item) => item.visible).map((item) => item.id);
 
       setPreferences({
         ...preferences,
         visibleContent,
       });
+      findingsTablePreferences.save({ visibleContent });
     },
     contentDisplayPreference: {
       title: 'Column preferences',
@@ -388,53 +418,42 @@ export default function FindingsTable() {
     },
   };
 
-  const allColumnDefinitions = useMemo(() => {
-    const columns = createColumnDefinitions(navigate);
-    // Add IDs to columns for preferences
-    return columns.map((col, index) => ({
-      ...col,
-      id: [
-        'findingType',
-        'findingDescription',
-        'remediationStatus',
-        'accountId',
-        'findingId',
-        'resourceType',
-        'resourceId',
-        'severity',
-        'securityHubUpdatedAtTime',
-        'consoleLink',
-        'suppressed'
-      ][index]
-    }));
-  }, [navigate]);
+  const allColumnDefinitions = useMemo(() => createColumnDefinitions(navigate), [navigate]);
 
   const columnDefinitions = useMemo(() => {
     if (!preferences?.visibleContent) {
       // Default: show all columns except suppressed
-      return allColumnDefinitions.filter(col => col.id !== 'suppressed');
+      return allColumnDefinitions.filter((col) => col.id !== 'suppressed');
     }
 
-    return allColumnDefinitions.filter(col => preferences.visibleContent!.includes(col.id));
+    return allColumnDefinitions.filter((col) => col.id && preferences.visibleContent?.includes(col.id));
   }, [allColumnDefinitions, preferences?.visibleContent]);
 
-
-  const handleFilterChange = ({ detail }: any) => {
-    setFilterTokens(detail.tokens || []);
-    setFilterOperation(detail.operation || 'and');
+  const handleFilterChange = ({ detail }: { detail: PropertyFilterProps.Query }) => {
+    const tokens = [...(detail.tokens || [])];
+    const operation = detail.operation || 'and';
+    setFilterTokens(tokens);
+    setFilterOperation(operation);
+    findingsTablePreferences.save({ filterTokens: tokens });
   };
 
-  const handleSortingChange = (detail: any) => {
-    setSortingColumn(detail.sortingColumn);
-    setSortingDescending(detail.isDescending);
+  const handleSortingChange = ({ detail }: { detail: TableProps.SortingState<FindingApiResponse> }) => {
+    if (detail.sortingColumn) {
+      setSortingColumn(detail.sortingColumn);
+    }
+    setSortingDescending(detail.isDescending ?? false);
+    findingsTablePreferences.save({
+      sortingField: detail.sortingColumn?.sortingField,
+      sortingDescending: detail.isDescending ?? false,
+    });
   };
 
   const loadMoreFindings = useCallback(async () => {
     if (!hasMoreData || isLoadingMore || isLoading) return;
-    
+
     setOperationType('loadMore');
     setIsLoadingMore(true);
-    
+
     const searchRequest = buildSearchRequest(true);
     searchFindings(searchRequest);
   }, [hasMoreData, isLoadingMore, isLoading, searchFindings, buildSearchRequest]);
@@ -452,7 +471,7 @@ export default function FindingsTable() {
         root: null,
         rootMargin: '50px', // Trigger 50px before reaching the element
         threshold: 0.1,
-      }
+      },
     );
 
     const currentTrigger = loadMoreTriggerRef.current;
@@ -509,12 +528,8 @@ export default function FindingsTable() {
     setShowConfirmModal(true);
   };
 
-
   // Generic suppress/unsuppress handler
-  const handleSuppressionAction = async (
-    actionType: 'Suppress' | 'Unsuppress',
-    findingIds: string[]
-  ) => {
+  const handleSuppressionAction = async (actionType: 'Suppress' | 'Unsuppress', findingIds: string[]) => {
     const suppressValue = actionType === 'Suppress';
 
     const result = await executeAction({
@@ -523,16 +538,16 @@ export default function FindingsTable() {
     });
 
     if (!result.error) {
-      setAllFindings(prevFindings =>
-        prevFindings.map(finding =>
-          findingIds.includes(finding.findingId)
-            ? { ...finding, suppressed: suppressValue }
-            : finding
-        )
+      setAllFindings((prevFindings) =>
+        prevFindings.map((finding) =>
+          findingIds.includes(finding.findingId) ? { ...finding, suppressed: suppressValue } : finding,
+        ),
       );
       console.log(`Successfully ${actionType}ed ${pendingAction?.items.length} finding(s)`);
       setErrorMessage(null);
-      setSuccessMessage(`Successfully ${actionType.toLowerCase()}ed ${pendingAction?.items.length} finding${pendingAction?.items.length === 1 ? '' : 's'}`);
+      setSuccessMessage(
+        `Successfully ${actionType.toLowerCase()}ed ${pendingAction?.items.length} finding${pendingAction?.items.length === 1 ? '' : 's'}`,
+      );
     } else {
       console.error(`Failed to ${actionType} findings:`, result.error);
       const errorMsg = getErrorMessage(result.error) || 'Please try again.';
@@ -550,7 +565,7 @@ export default function FindingsTable() {
 
   const handleRemediationAction = async (
     actionType: 'Remediate' | 'RemediateAndGenerateTicket',
-    findingIds: string[]
+    findingIds: string[],
   ) => {
     const result = await executeAction({
       actionType,
@@ -558,20 +573,22 @@ export default function FindingsTable() {
     });
 
     if (!result.error) {
-      setAllFindings(prevFindings =>
-        prevFindings.map(finding =>
+      setAllFindings((prevFindings) =>
+        prevFindings.map((finding) =>
           findingIds.includes(finding.findingId)
-            ? { 
-                ...finding, 
+            ? {
+                ...finding,
                 remediationStatus: 'IN_PROGRESS' as const,
-                lastUpdatedTime: new Date().toISOString()
+                lastUpdatedTime: new Date().toISOString(),
               }
-            : finding
-        )
+            : finding,
+        ),
       );
       console.log(`Successfully initiated ${actionType} for ${pendingAction?.items.length} finding(s)`);
       setErrorMessage(null);
-      setSuccessMessage(`Successfully sent ${pendingAction?.items.length} finding${pendingAction?.items.length === 1 ? '' : 's'} for Remediation`);
+      setSuccessMessage(
+        `Successfully sent ${pendingAction?.items.length} finding${pendingAction?.items.length === 1 ? '' : 's'} for Remediation`,
+      );
     } else {
       console.error(`Failed to execute ${actionType}:`, result.error);
       const errorMsg = getErrorMessage(result.error) || 'Please try again.';
@@ -594,7 +611,7 @@ export default function FindingsTable() {
     if (!pendingAction || pendingAction.items.length === 0) return;
 
     try {
-      const findingIds = pendingAction.items.map(item => item.findingId);
+      const findingIds = pendingAction.items.map((item) => item.findingId);
 
       switch (pendingAction.type) {
         case 'suppress':
@@ -613,7 +630,6 @@ export default function FindingsTable() {
 
       // Clear selection after action
       setSelectedItems([]);
-
     } catch (error) {
       console.error(`Failed to execute ${pendingAction.type} action:`, error);
     } finally {
@@ -690,7 +706,7 @@ export default function FindingsTable() {
 
         if (result.status === 'partial') {
           setErrorMessage(
-            `Partial Export: Exported ${result.totalExported.toLocaleString()} records. ${result.message || ''}`
+            `Partial Export: Exported ${result.totalExported.toLocaleString()} records. ${result.message || ''}`,
           );
         }
       }
@@ -711,11 +727,7 @@ export default function FindingsTable() {
             onDismiss={() => setSuccessMessage(null)}
             action={
               successMessage.includes('Remediation') ? (
-                <Button
-                  onClick={() => navigate('/history')}
-                >
-                  View History
-                </Button>
+                <Button onClick={() => navigate('/history')}>View History</Button>
               ) : undefined
             }
           >
@@ -726,12 +738,7 @@ export default function FindingsTable() {
 
       {errorMessage && (
         <Box margin={{ top: 'xs', bottom: 'xs', horizontal: 'xxxl' }} padding={{ horizontal: 'xxxl' }}>
-          <Alert
-            type="error"
-            dismissible
-            onDismiss={() => setErrorMessage(null)}
-            header="Operation Failed"
-          >
+          <Alert type="error" dismissible onDismiss={() => setErrorMessage(null)} header="Operation Failed">
             {errorMessage}
           </Alert>
         </Box>
@@ -743,12 +750,7 @@ export default function FindingsTable() {
         counter={`(${findings.length}${hasMoreData ? '+' : ''})`}
         actions={
           <SpaceBetween direction="horizontal" size="xs">
-            <Button
-              iconName="refresh"
-              loading={isLoading}
-              onClick={handleRefresh}
-              ariaLabel="Refresh findings"
-            />
+            <Button iconName="refresh" loading={isLoading} onClick={handleRefresh} ariaLabel="Refresh findings" />
             <Button
               iconName="download"
               loading={isExportLoading}
@@ -809,8 +811,9 @@ export default function FindingsTable() {
               tokenLimitShowMore: 'Show more',
               tokenLimitShowFewer: 'Show fewer',
               clearFiltersText: 'Clear filters',
-              removeTokenButtonAriaLabel: (token) => `Remove token ${token.propertyKey} ${token.operator} ${token.value}`,
-              enteredTextLabel: (text) => `Use: "${text}"`
+              removeTokenButtonAriaLabel: (token) =>
+                `Remove token ${token.propertyKey} ${token.operator} ${token.value}`,
+              enteredTextLabel: (text) => `Use: "${text}"`,
             }}
             expandToViewport
           />
@@ -821,26 +824,23 @@ export default function FindingsTable() {
       <Box padding={{ vertical: 's' }}>
         <Toggle
           onChange={({ detail }) => {
-            setShowSuppressed(detail.checked);
+            const newShowSuppressed = detail.checked;
+            setShowSuppressed(newShowSuppressed);
 
-            if (detail.checked) {
-              // Add suppressed column
-              const currentVisibleContent = preferences?.visibleContent || [
-                'findingType', 'findingDescription', 'remediationStatus', 'accountId',
-                'findingId', 'resourceType', 'resourceId', 'severity',
-                'securityHubUpdatedAtTime', 'consoleLink'
-              ];
-              setPreferences({
-                ...preferences,
-                visibleContent: [...currentVisibleContent, 'suppressed']
-              });
-            } else {
-              // Remove suppressed column
-              setPreferences({
-                ...preferences,
-                visibleContent: (preferences?.visibleContent || []).filter(col => col !== 'suppressed')
-              });
-            }
+            const currentColumns = preferences?.visibleContent || [];
+            const newVisibleContent = newShowSuppressed
+              ? [...new Set([...currentColumns, 'suppressed'])]
+              : currentColumns.filter((col) => col !== 'suppressed');
+
+            setPreferences({
+              ...preferences,
+              visibleContent: newVisibleContent,
+            });
+
+            findingsTablePreferences.save({
+              showSuppressed: newShowSuppressed,
+              visibleContent: newVisibleContent,
+            });
           }}
           checked={showSuppressed}
         >
@@ -859,25 +859,23 @@ export default function FindingsTable() {
           onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
           sortingColumn={sortingColumn}
           sortingDescending={sortingDescending}
-          onSortingChange={({ detail }) => handleSortingChange(detail)}
+          onSortingChange={handleSortingChange}
           stickyHeader
           stripedRows={preferences?.stripedRows ?? false}
           contentDensity={preferences?.contentDensity ?? 'comfortable'}
           wrapLines={preferences?.wrapLines ?? true}
           variant="full-page"
           selectionType="multi"
-          isItemDisabled={(item) =>
-            item.remediationStatus === 'IN_PROGRESS' || item.remediationStatus === 'SUCCESS'
-          }
+          isItemDisabled={(item) => item.remediationStatus === 'IN_PROGRESS' || item.remediationStatus === 'SUCCESS'}
           ariaLabels={{
             selectionGroupLabel: 'Items selection',
             tableLabel: 'Findings table',
             allItemsSelectionLabel: ({ selectedItems }) =>
               `${selectedItems.length} ${selectedItems.length === 1 ? 'item' : 'items'} selected`,
             itemSelectionLabel: ({ selectedItems }, item) => {
-              const isItemSelected = selectedItems.filter(i => i.findingId === item.findingId).length;
+              const isItemSelected = selectedItems.filter((i) => i.findingId === item.findingId).length;
               return `${item.findingDescription} is ${isItemSelected ? '' : 'not '}selected`;
-            }
+            },
           }}
           empty={<EmptyTableState title="No findings to display" subtitle="" />}
         />
@@ -901,13 +899,10 @@ export default function FindingsTable() {
           <Box textAlign="center" padding="l" fontWeight="bold">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <Spinner size="normal" />
-              <span>
-                Loading more findings...
-              </span>
+              <span>Loading more findings...</span>
             </div>
           </Box>
         )}
-
 
         {/* End of Results Indicator */}
         {!hasMoreData && findings.length > 0 && (
@@ -916,7 +911,6 @@ export default function FindingsTable() {
           </Box>
         )}
       </div>
-
 
       {showConfirmModal && pendingAction && (
         <Modal
@@ -929,11 +923,7 @@ export default function FindingsTable() {
                 <Button variant="link" onClick={cancelConfirmation}>
                   Cancel
                 </Button>
-                <Button
-                  variant="primary"
-                  onClick={executeConfirmedAction}
-                  loading={isExecutingAction}
-                >
+                <Button variant="primary" onClick={executeConfirmedAction} loading={isExecutingAction}>
                   {getModalContent().actionButton}
                 </Button>
               </SpaceBetween>
@@ -941,23 +931,21 @@ export default function FindingsTable() {
           }
         >
           <SpaceBetween size="m">
-            <Box>
-              {getModalContent().message}
-            </Box>
+            <Box>{getModalContent().message}</Box>
             {pendingAction.items.length > 0 && (
               <Box>
                 <strong>Selected finding IDs:</strong>
                 <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                    {pendingAction.items.slice(0, 5).map((item) => (
+                  {pendingAction.items.slice(0, 5).map((item) => (
                     <li key={item.findingId} style={{ marginBottom: '4px', fontFamily: 'monospace', fontSize: '12px' }}>
-                        {item.findingId}
+                      {item.findingId}
                     </li>
-                    ))}
-                    {pendingAction.items.length > 5 && (
+                  ))}
+                  {pendingAction.items.length > 5 && (
                     <li style={{ fontStyle: 'italic', color: '#666' }}>
-                        ... and {pendingAction.items.length - 5} more finding(s)
+                      ... and {pendingAction.items.length - 5} more finding(s)
                     </li>
-                    )}
+                  )}
                 </ul>
               </Box>
             )}

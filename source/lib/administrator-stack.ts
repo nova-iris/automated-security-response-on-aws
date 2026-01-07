@@ -76,6 +76,9 @@ export class AdministratorStack extends cdk.Stack {
       ? Number(process.env.ORCHESTRATOR_TIMEOUT_HOURS)
       : 23;
     const enableAdaptiveConcurrency = process.env.ENABLE_ADAPTIVE_CONCURRENCY || true;
+    const kmsDataKeyReuseDuration = process.env.KMS_DATA_KEY_REUSE_DURATION
+      ? Number(process.env.KMS_DATA_KEY_REUSE_DURATION)
+      : 60;
 
     // Pre-processor function name
     const preProcessorFunctionName = `${props.solutionId}-ASR-PreProcessor`;
@@ -102,8 +105,15 @@ export class AdministratorStack extends cdk.Stack {
 
     const kmsActions = ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'];
 
-    const kmsServicePolicy = new PolicyStatement({
-      principals: [new ServicePrincipal('sns.amazonaws.com'), new ServicePrincipal(`logs.${this.urlSuffix}`)],
+    const kmsSNSPolicy = new PolicyStatement({
+      principals: [new ServicePrincipal('sns.amazonaws.com')],
+      actions: kmsActions,
+      resources: ['*'],
+    });
+    kmsKeyPolicy.addStatements(kmsSNSPolicy);
+
+    const kmsLogsPolicy = new PolicyStatement({
+      principals: [new ServicePrincipal(`logs.${this.urlSuffix}`)],
       actions: kmsActions,
       resources: ['*'],
       conditions: {
@@ -115,7 +125,7 @@ export class AdministratorStack extends cdk.Stack {
         },
       },
     });
-    kmsKeyPolicy.addStatements(kmsServicePolicy);
+    kmsKeyPolicy.addStatements(kmsLogsPolicy);
 
     // key encrypts DynamoDB tables and Pre-processor queue
     const kmsGeneralServicePolicy = new PolicyStatement({
@@ -963,6 +973,7 @@ export class AdministratorStack extends cdk.Stack {
       encryption: sqs.QueueEncryption.KMS,
       enforceSSL: true,
       encryptionMasterKey: kmsKey,
+      dataKeyReuse: Duration.minutes(kmsDataKeyReuseDuration),
     });
 
     const deadLetterQueueDeclaration: sqs.DeadLetterQueue = {
@@ -975,6 +986,7 @@ export class AdministratorStack extends cdk.Stack {
       enforceSSL: true,
       deadLetterQueue: deadLetterQueueDeclaration,
       encryptionMasterKey: kmsKey,
+      dataKeyReuse: Duration.minutes(kmsDataKeyReuseDuration),
     });
 
     const eventSource = new lambdaEventSources.SqsEventSource(schedulingQueue, {
@@ -1085,6 +1097,7 @@ export class AdministratorStack extends cdk.Stack {
     const csvExportBucket = new Bucket(this, 'CSVExportBucket', {
       encryption: s3.BucketEncryption.KMS,
       encryptionKey: kmsKey,
+      bucketKeyEnabled: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       versioned: true,

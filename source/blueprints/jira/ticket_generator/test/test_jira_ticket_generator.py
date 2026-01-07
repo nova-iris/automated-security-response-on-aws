@@ -9,7 +9,15 @@ from unittest.mock import MagicMock, patch
 import boto3
 from aws_lambda_context import LambdaContext
 from botocore.config import Config
-from jira_ticket_generator import get_account_alias, lambda_handler
+from jira_ticket_generator import (
+    APICredentials,
+    RemediationInfo,
+    create_ticket,
+    get_account_alias,
+    get_api_credentials,
+    get_post_endpoint_from_instance_uri,
+    lambda_handler,
+)
 from moto import mock_aws
 
 REGION = "us-east-1"
@@ -190,3 +198,106 @@ def test_get_account_alias_error():
     account_alias = get_account_alias(MOTO_ACCOUNT_ID)
 
     assert account_alias == MOTO_ACCOUNT_ID
+
+
+def test_get_post_endpoint_from_instance_uri():
+    # ACT
+    result = get_post_endpoint_from_instance_uri("https://test.atlassian.net")
+
+    # ASSERT
+    assert result == "https://test.atlassian.net/rest/api/2/issue"
+
+
+def test_get_post_endpoint_invalid_uri():
+    # ACT & ASSERT
+    try:
+        get_post_endpoint_from_instance_uri("https://invalid.com")
+        assert False, "Expected RuntimeError"
+    except RuntimeError:
+        pass
+
+
+@patch("jira_ticket_generator.get_secret_value_cached")
+def test_get_api_credentials(mock_get_secret):
+    # ARRANGE
+    mock_get_secret.return_value = '{"Username": "user", "Password": "pass"}'
+
+    # ACT
+    result = get_api_credentials("test-arn")
+
+    # ASSERT
+    assert result["Username"] == "user"
+    assert result["Password"] == "pass"
+
+
+@patch("jira_ticket_generator.get_secret_value_cached")
+def test_get_api_credentials_missing_keys(mock_get_secret):
+    # ARRANGE
+    mock_get_secret.return_value = '{"Username": "user"}'
+
+    # ACT & ASSERT
+    try:
+        get_api_credentials("test-arn")
+        assert False, "Expected RuntimeError"
+    except RuntimeError:
+        pass
+
+
+@patch("jira_ticket_generator.connect_to_service")
+def test_get_account_alias_with_connect_mock(mock_connect):
+    # ARRANGE
+    mock_org = MagicMock()
+    mock_org.describe_account.return_value = {"Account": {"Name": "TestAccount"}}
+    mock_connect.return_value = mock_org
+
+    # ACT
+    result = get_account_alias("123456789012")
+
+    # ASSERT
+    assert result == "TestAccount"
+
+
+@patch("jira_ticket_generator.connect_to_service")
+def test_get_account_alias_error_with_connect_mock(mock_connect):
+    # ARRANGE
+    mock_connect.side_effect = Exception("Error")
+
+    # ACT
+    result = get_account_alias("123456789012")
+
+    # ASSERT
+    assert result == "123456789012"
+
+
+@patch("urllib.request.urlopen")
+def test_create_ticket_success(mock_urlopen):
+    # ARRANGE
+    mock_response = MagicMock()
+    mock_response.__enter__.return_value = mock_response
+    mock_response.getcode.return_value = 201
+    mock_response.read.return_value = json.dumps({"key": "TEST-123"}).encode("utf-8")
+    mock_urlopen.return_value = mock_response
+
+    remediation_info: RemediationInfo = {
+        "Message": "Test",
+        "FindingDescription": "Test",
+        "FindingSeverity": "HIGH",
+        "SecurityControlId": "TEST.1",
+        "FindingAccountId": "123456789012",
+        "AffectedResource": "test",
+    }
+    api_credentials: APICredentials = {"Username": "user", "Password": "pass"}
+
+    # ACT
+    result = create_ticket(
+        remediation_info,
+        "https://test.atlassian.net",
+        "https://test.atlassian.net/rest/api/2/issue",
+        api_credentials,
+        "TEST",
+        "TestAccount",
+    )
+
+    # ASSERT
+    assert result["Ok"] is True
+    assert "TEST-123" in result["TicketURL"]

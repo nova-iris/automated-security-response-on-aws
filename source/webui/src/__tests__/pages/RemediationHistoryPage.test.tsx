@@ -1,20 +1,34 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { http } from 'msw';
+
+beforeEach(() => {
+  localStorage.clear();
+});
+
+afterEach(() => {
+  server.resetHandlers();
+});
 import { ok } from '../../mocks/handlers.ts';
 import { ApiEndpoints } from '../../store/solutionApi.ts';
 import { MOCK_SERVER_URL, server } from '../server.ts';
+import { SearchRequest } from '../../store/types.ts';
 import { generateTestRemediation, generateTestRemediations } from '../test-data-factory.ts';
 import { renderAppContent } from '../test-utils.tsx';
 
 describe('RemediationHistoryPage', () => {
   it('renders an empty table', async () => {
     // GIVEN the backend returns no remediations
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => await ok({ Remediations: [], NextToken: null })));
+    server.use(
+      http.post(
+        MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+        async () => await ok({ Remediations: [], NextToken: null }),
+      ),
+    );
 
     // WHEN rendering the /history route
     renderAppContent({
@@ -31,7 +45,12 @@ describe('RemediationHistoryPage', () => {
     // GIVEN the backend returns 5 remediations
     const remediations = generateTestRemediations(5);
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => await ok({ Remediations: remediations, NextToken: null })));
+    server.use(
+      http.post(
+        MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+        async () => await ok({ Remediations: remediations, NextToken: null }),
+      ),
+    );
 
     // WHEN
     renderAppContent({
@@ -40,7 +59,7 @@ describe('RemediationHistoryPage', () => {
 
     // THEN expect 5 remediations plus a header row in the table
     const withinMain = within(screen.getByTestId('main-content'));
-    
+
     // Wait for the data to load (the refresh button should not be in loading state)
     await withinMain.findByRole('button', { name: 'Refresh history' });
 
@@ -60,20 +79,22 @@ describe('RemediationHistoryPage', () => {
     // GIVEN the backend returns different numbers of remediations on subsequent requests
     let requestCount = 0;
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => {
-      requestCount++;
-      if (requestCount <= 1) {
-        return await ok({ 
-          Remediations: generateTestRemediations(3), 
-          NextToken: null 
-        });
-      } else {
-        return await ok({ 
-          Remediations: generateTestRemediations(4), 
-          NextToken: null 
-        });
-      }
-    }));
+    server.use(
+      http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => {
+        requestCount++;
+        if (requestCount <= 1) {
+          return await ok({
+            Remediations: generateTestRemediations(3),
+            NextToken: null,
+          });
+        } else {
+          return await ok({
+            Remediations: generateTestRemediations(4),
+            NextToken: null,
+          });
+        }
+      }),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -81,20 +102,20 @@ describe('RemediationHistoryPage', () => {
     });
 
     const withinMain = within(screen.getByTestId('main-content'));
-    
+
     // Wait for the initial data to load by waiting for the counter to show 3 items
     await withinMain.findByText('(3)');
-    
+
     // Wait for the refresh button to appear and not be in loading state
     const refreshButton = await withinMain.findByRole('button', { name: 'Refresh history' });
     expect(refreshButton).toBeInTheDocument();
     expect(refreshButton).not.toHaveAttribute('aria-disabled', 'true');
-    
+
     expect(requestCount).toBe(1);
 
     // WHEN clicking the refresh button
     await userEvent.click(refreshButton);
-    
+
     // THEN it should make another request and the UI should update to show 4 items
     await withinMain.findByText('(4)');
     expect(requestCount).toBe(2);
@@ -103,25 +124,30 @@ describe('RemediationHistoryPage', () => {
   it('supports all filtering types and interactions', async () => {
     // GIVEN the backend returns remediations with diverse data
     const remediations = [
-      ...generateTestRemediations(1, { 
-        findingId: 'finding-123', 
+      ...generateTestRemediations(1, {
+        findingId: 'finding-123',
         remediationStatus: 'SUCCESS',
         accountId: '123456789012',
         resourceId: 'resource-abc123',
         lastUpdatedBy: 'user1@example.com',
-        resourceType: 'AWS::S3::Bucket'
+        resourceType: 'AWS::S3::Bucket',
       }),
-      ...generateTestRemediations(1, { 
+      ...generateTestRemediations(1, {
         findingId: 'finding-456',
         remediationStatus: 'FAILED',
         accountId: '123456789013',
         resourceId: 'resource-def456',
         lastUpdatedBy: 'user2@example.com',
-        resourceType: 'AWS::EC2::Instance'
+        resourceType: 'AWS::EC2::Instance',
       }),
     ];
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => await ok({ Remediations: remediations, NextToken: null })));
+    server.use(
+      http.post(
+        MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+        async () => await ok({ Remediations: remediations, NextToken: null }),
+      ),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -129,7 +155,7 @@ describe('RemediationHistoryPage', () => {
     });
 
     const withinMain = within(screen.getByTestId('main-content'));
-    
+
     // Wait for the data to load by waiting for the table to appear
     const table = await withinMain.findByRole('table');
     const filterInput = await withinMain.findByPlaceholderText('Search Remediations');
@@ -169,7 +195,7 @@ describe('RemediationHistoryPage', () => {
     await userEvent.type(filterInput, 'Resource Type : S3');
     await userEvent.keyboard('{Enter}');
     expect(filterInput).toHaveValue('Resource Type : S3');
-    
+
     expect(table).toBeInTheDocument();
   });
 
@@ -180,16 +206,21 @@ describe('RemediationHistoryPage', () => {
       {
         ...generateTestRemediation(),
         findingId: 'finding-1',
-        lastUpdatedTime: new Date(now.getTime() - 3600000).toISOString() // 1 hour ago
+        lastUpdatedTime: new Date(now.getTime() - 3600000).toISOString(), // 1 hour ago
       },
       {
         ...generateTestRemediation(),
         findingId: 'finding-2',
-        lastUpdatedTime: new Date(now.getTime() - 7200000).toISOString() // 2 hours ago
+        lastUpdatedTime: new Date(now.getTime() - 7200000).toISOString(), // 2 hours ago
       },
     ];
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => await ok({ Remediations: remediations, NextToken: null })));
+    server.use(
+      http.post(
+        MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+        async () => await ok({ Remediations: remediations, NextToken: null }),
+      ),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -197,10 +228,10 @@ describe('RemediationHistoryPage', () => {
     });
 
     const withinMain = within(screen.getByTestId('main-content'));
-    
+
     // Wait for the data to load by waiting for the counter to show 2 items
     await withinMain.findByText('(2)');
-    
+
     // Wait for the table to appear
     const table = await withinMain.findByRole('table');
     const timestampHeader = await within(table).findByText('Execution Timestamp');
@@ -209,7 +240,7 @@ describe('RemediationHistoryPage', () => {
     // Verify that data is displayed in the table - wait for the actual data rows
     const rows = await within(table).findAllByRole('row');
     expect(rows.length).toBe(3); // Header + 2 data rows
-    
+
     // Verify that the finding IDs are present in the table
     await within(table).findByText('finding-1');
     await within(table).findByText('finding-2');
@@ -219,7 +250,12 @@ describe('RemediationHistoryPage', () => {
     // GIVEN the backend returns remediations
     const remediations = generateTestRemediations(5);
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => await ok({ Remediations: remediations, NextToken: null })));
+    server.use(
+      http.post(
+        MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+        async () => await ok({ Remediations: remediations, NextToken: null }),
+      ),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -227,10 +263,10 @@ describe('RemediationHistoryPage', () => {
     });
 
     const withinMain = within(screen.getByTestId('main-content'));
-    
+
     // Wait for the data to load by waiting for the table to appear
     await withinMain.findByRole('table');
-    
+
     // Check that the header counter shows the correct count (counter is in separate span)
     expect(await withinMain.findByText('(5)')).toBeInTheDocument();
 
@@ -245,12 +281,14 @@ describe('RemediationHistoryPage', () => {
 
   it('handles error states gracefully', async () => {
     // GIVEN the backend returns an error
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => {
-      return new Response(JSON.stringify({ message: 'Internal Server Error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }));
+    server.use(
+      http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => {
+        return new Response(JSON.stringify({ message: 'Internal Server Error' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -268,7 +306,12 @@ describe('RemediationHistoryPage', () => {
     // GIVEN the backend returns remediations
     const remediations = generateTestRemediations(5);
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => await ok({ Remediations: remediations, NextToken: null })));
+    server.use(
+      http.post(
+        MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+        async () => await ok({ Remediations: remediations, NextToken: null }),
+      ),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -276,10 +319,10 @@ describe('RemediationHistoryPage', () => {
     });
 
     const withinMain = within(screen.getByTestId('main-content'));
-    
+
     // Wait for the data to load by waiting for the table to appear
     await withinMain.findByRole('table');
-    
+
     // Check that the initial counter appears (counter is in separate span)
     expect(await withinMain.findByText('(5)')).toBeInTheDocument();
 
@@ -294,7 +337,7 @@ describe('RemediationHistoryPage', () => {
     // WHEN clearing filters
     await userEvent.clear(filterInput);
     await userEvent.keyboard('{Enter}');
-    
+
     // THEN the filter should be cleared
     expect(filterInput).toHaveValue('');
   });
@@ -305,25 +348,27 @@ describe('RemediationHistoryPage', () => {
     const firstBatch = generateTestRemediations(3);
     const secondBatch = generateTestRemediations(2);
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async (req) => {
-      const body = await req.request.json() as any;
-      requestCount++;
+    server.use(
+      http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async (req) => {
+        const body = (await req.request.json()) as any;
+        requestCount++;
 
-      if (requestCount === 1) {
-        // First request - return first batch with NextToken
-        return await ok({
-          Remediations: firstBatch,
-          NextToken: 'next-token-123'
-        });
-      } else if (requestCount === 2 && body.NextToken === 'next-token-123') {
-        // Second request with NextToken - return second batch
-        return await ok({
-          Remediations: secondBatch,
-          NextToken: null
-        });
-      }
-      return await ok({ Remediations: [], NextToken: null });
-    }));
+        if (requestCount === 1) {
+          // First request - return first batch with NextToken
+          return await ok({
+            Remediations: firstBatch,
+            NextToken: 'next-token-123',
+          });
+        } else if (requestCount === 2 && body.NextToken === 'next-token-123') {
+          // Second request with NextToken - return second batch
+          return await ok({
+            Remediations: secondBatch,
+            NextToken: null,
+          });
+        }
+        return await ok({ Remediations: [], NextToken: null });
+      }),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -349,25 +394,27 @@ describe('RemediationHistoryPage', () => {
     let requestCount = 0;
     const firstBatch = generateTestRemediations(3);
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async (req) => {
-      const body = await req.request.json() as any;
-      requestCount++;
+    server.use(
+      http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async (req) => {
+        const body = (await req.request.json()) as any;
+        requestCount++;
 
-      if (requestCount === 1) {
-        // First request succeeds
-        return await ok({
-          Remediations: firstBatch,
-          NextToken: 'next-token-123'
-        });
-      } else if (body.NextToken) {
-        // Load more request fails
-        return new Response(JSON.stringify({ message: 'Load more failed' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-      return await ok({ Remediations: [], NextToken: null });
-    }));
+        if (requestCount === 1) {
+          // First request succeeds
+          return await ok({
+            Remediations: firstBatch,
+            NextToken: 'next-token-123',
+          });
+        } else if (body.NextToken) {
+          // Load more request fails
+          return new Response(JSON.stringify({ message: 'Load more failed' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        return await ok({ Remediations: [], NextToken: null });
+      }),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -381,12 +428,11 @@ describe('RemediationHistoryPage', () => {
 
     // THEN should show initial data with + indicator for more data
     expect(requestCount).toBe(1);
-    
+
     // Verify the table shows the initial 3 items
     const table = await withinMain.findByRole('table');
     const rows = await within(table).findAllByRole('row');
     expect(rows).toHaveLength(4);
-
   });
 
   it('supports different filter operators', async () => {
@@ -395,16 +441,21 @@ describe('RemediationHistoryPage', () => {
       ...generateTestRemediations(1, {
         findingId: 'finding-abc-123',
         accountId: '111111111111',
-        resourceId: 'resource-test-456'
+        resourceId: 'resource-test-456',
       }),
       ...generateTestRemediations(1, {
         findingId: 'finding-xyz-789',
         accountId: '222222222222',
-        resourceId: 'resource-prod-123'
+        resourceId: 'resource-prod-123',
       }),
     ];
 
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => await ok({ Remediations: remediations, NextToken: null })));
+    server.use(
+      http.post(
+        MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+        async () => await ok({ Remediations: remediations, NextToken: null }),
+      ),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -435,7 +486,12 @@ describe('RemediationHistoryPage', () => {
 
   it('handles non-array allHistory gracefully', async () => {
     // GIVEN the backend returns invalid data structure
-    server.use(http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async () => await ok({ Remediations: null, NextToken: null })));
+    server.use(
+      http.post(
+        MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+        async () => await ok({ Remediations: null, NextToken: null }),
+      ),
+    );
 
     // WHEN rendering the page
     renderAppContent({
@@ -448,4 +504,101 @@ describe('RemediationHistoryPage', () => {
     expect(await withinMain.findByText(/no history to display/i)).toBeInTheDocument();
   });
 
+  it('persists filter and sorting preferences across page navigation', async () => {
+    const remediations = [
+      ...generateTestRemediations(1, { remediationStatus: 'SUCCESS' }),
+      ...generateTestRemediations(4),
+    ];
+    let lastSearchRequest: SearchRequest | null = null;
+
+    server.use(
+      http.post(MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS, async ({ request }) => {
+        lastSearchRequest = (await request.json()) as SearchRequest;
+        return await ok({ Remediations: remediations, NextToken: null });
+      }),
+    );
+
+    // ARRANGE - Render history page and apply filters/sorting
+    const { renderResult } = renderAppContent({ initialRoute: '/history' });
+    let withinMain = within(screen.getByTestId('main-content'));
+
+    // Apply filter using Cloudscape PropertyFilter dropdown
+    const filterInput = await withinMain.findByPlaceholderText('Search Remediations');
+    await userEvent.click(filterInput);
+
+    // Wait for dropdown to appear and select "Status" from the property dropdown
+    const dropdown = await screen.findByRole('listbox');
+    const statusOption = await within(dropdown).findByText('Status');
+    await userEvent.click(statusOption);
+
+    // Select "=" operator
+    const operatorDropdown = await screen.findByRole('listbox');
+    const equalsOption = await within(operatorDropdown).findByText('=');
+    await userEvent.click(equalsOption);
+
+    // Select "Success" value
+    const valueDropdown = await screen.findByRole('listbox');
+    const successOption = await within(valueDropdown).findByText('Success');
+    await userEvent.click(successOption);
+
+    await waitFor(() => {
+      expect(lastSearchRequest?.Filters?.CompositeFilters?.[0]?.StringFilters?.[0]?.FieldName).toBe(
+        'remediationStatus',
+      );
+      // default sort should be desc
+      expect(lastSearchRequest?.SortCriteria?.[0]?.SortOrder).toBe('desc');
+    });
+
+    // Change sorting
+    const table = await withinMain.findByRole('table');
+    const timestampHeader = await within(table).findByText('Execution Timestamp');
+    await userEvent.click(timestampHeader);
+
+    await waitFor(() => {
+      expect(lastSearchRequest?.SortCriteria?.[0]?.Field).toBe('lastUpdatedTime');
+      expect(lastSearchRequest?.SortCriteria?.[0]?.SortOrder).toBe('asc');
+    });
+
+    // ACT - Navigate away and back
+    renderResult.unmount();
+    renderAppContent({ initialRoute: '/history' });
+
+    // ASSERT - All preferences should be restored
+    withinMain = within(screen.getByTestId('main-content'));
+    await withinMain.findByRole('table');
+    await waitFor(() => {
+      expect(lastSearchRequest?.SortCriteria?.[0]?.Field).toBe('lastUpdatedTime');
+      expect(lastSearchRequest?.SortCriteria?.[0]?.SortOrder).toBe('asc');
+      expect(lastSearchRequest?.Filters?.CompositeFilters?.[0]?.StringFilters?.[0]?.FieldName).toBe(
+        'remediationStatus',
+      );
+      expect(lastSearchRequest?.Filters?.CompositeFilters?.[0]?.StringFilters?.[0]?.Filter.Value).toBe('SUCCESS');
+    });
+  });
+});
+
+it('falls back to default sorting column when persisted sorting field is invalid', async () => {
+  // ARRANGE - persist an invalid sorting field
+  localStorage.setItem(
+    'HistoryTablePreferences',
+    JSON.stringify({
+      sortingField: 'invalidField',
+      sortingDescending: true,
+    }),
+  );
+
+  server.use(
+    http.post(
+      MOCK_SERVER_URL + ApiEndpoints.REMEDIATIONS,
+      async () => await ok({ Remediations: generateTestRemediations(3), NextToken: null }),
+    ),
+  );
+
+  // ACT
+  renderAppContent({ initialRoute: '/history' });
+
+  // ASSERT - table should render without errors using default sorting
+  const withinMain = within(screen.getByTestId('main-content'));
+  expect(await withinMain.findByRole('table')).toBeInTheDocument();
+  expect(await withinMain.findByText('(3)')).toBeInTheDocument();
 });

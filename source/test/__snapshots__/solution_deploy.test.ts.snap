@@ -1712,6 +1712,7 @@ exports[`Test if the Stack has all the resources. 1`] = `
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
             {
+              "BucketKeyEnabled": true,
               "ServerSideEncryptionByDefault": {
                 "KMSMasterKeyID": {
                   "Fn::GetAtt": [
@@ -8241,6 +8242,7 @@ exports[`Test if the Stack has all the resources. 1`] = `
     "PreProcessorConstructPreProcessorDLQC3A75225": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsDataKeyReusePeriodSeconds": 3600,
         "KmsMasterKeyId": {
           "Fn::GetAtt": [
             "SHARRkeyE6BD0F56",
@@ -8623,6 +8625,7 @@ exports[`Test if the Stack has all the resources. 1`] = `
     "PreProcessorConstructPreProcessorQueue8068A6BD": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsDataKeyReusePeriodSeconds": 3600,
         "KmsMasterKeyId": {
           "Fn::GetAtt": [
             "SHARRkeyE6BD0F56",
@@ -11078,6 +11081,20 @@ exports[`Test if the Stack has all the resources. 1`] = `
                 "kms:GenerateDataKey*",
                 "kms:Describe*",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "kms:Encrypt*",
+                "kms:Decrypt*",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:Describe*",
+              ],
               "Condition": {
                 "ArnEquals": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -11096,20 +11113,17 @@ exports[`Test if the Stack has all the resources. 1`] = `
               },
               "Effect": "Allow",
               "Principal": {
-                "Service": [
-                  "sns.amazonaws.com",
-                  {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "logs.",
-                        {
-                          "Ref": "AWS::URLSuffix",
-                        },
-                      ],
+                "Service": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "logs.",
+                      {
+                        "Ref": "AWS::URLSuffix",
+                      },
                     ],
-                  },
-                ],
+                  ],
+                },
               },
               "Resource": "*",
             },
@@ -11875,6 +11889,7 @@ exports[`Test if the Stack has all the resources. 1`] = `
     "SchedulingQueueB533E3CD": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsDataKeyReusePeriodSeconds": 3600,
         "KmsMasterKeyId": {
           "Fn::GetAtt": [
             "SHARRkeyE6BD0F56",
@@ -13217,6 +13232,7 @@ exports[`Test if the Stack has all the resources. 1`] = `
     "deadLetterSchedulingQueue9BCE9EA8": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsDataKeyReusePeriodSeconds": 3600,
         "KmsMasterKeyId": {
           "Fn::GetAtt": [
             "SHARRkeyE6BD0F56",

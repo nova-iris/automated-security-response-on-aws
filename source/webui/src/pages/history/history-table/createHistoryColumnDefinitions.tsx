@@ -53,11 +53,13 @@ export const createHistoryColumnDefinitions = (
   navigate: NavigateFunction,
 ): TableProps<RemediationHistoryApiResponse>['columnDefinitions'] => [
   {
+    id: 'findingId',
     header: 'Finding ID',
     cell: ({ findingId }) => findingId || '-',
     minWidth: '300px',
   },
   {
+    id: 'status',
     header: 'Status',
     cell: ({ remediationStatus, error }) => {
       const statusIndicator = (
@@ -83,27 +85,32 @@ export const createHistoryColumnDefinitions = (
     minWidth: '140px',
   },
   {
+    id: 'accountId',
     header: 'Account',
     cell: ({ accountId }) => accountId,
     minWidth: '140px',
   },
   {
+    id: 'resourceId',
     header: 'Resource ID',
     cell: ({ resourceId }) => resourceId || '-',
     minWidth: '150px',
   },
   {
+    id: 'executionTimestamp',
     header: 'Execution Timestamp',
     cell: ({ lastUpdatedTime }) => formatDateTime(lastUpdatedTime),
     sortingField: 'lastUpdatedTime',
     minWidth: '200px',
   },
   {
+    id: 'executedBy',
     header: 'Executed By',
     cell: ({ lastUpdatedBy }) => lastUpdatedBy || '-',
     minWidth: '180px',
   },
   {
+    id: 'viewExecution',
     header: 'View Execution',
     cell: ({ consoleLink }) => (
       <Link external href={consoleLink} target="_blank">

@@ -12,6 +12,7 @@ import boto3
 from aws_lambda_powertools import Logger, Tracer
 from botocore.config import Config
 from botocore.exceptions import ClientError
+from layer.secrets_cache import get_secret_value_cached
 
 boto_config = Config(retries={"mode": "standard"})
 
@@ -138,16 +139,8 @@ def get_api_credentials(secret_arn: str) -> str:
     """
     Retrieves the ServiceNow API credentials from the Secrets Manager ARN.
     """
-
-    secrets_manager_client = connect_to_service("secretsmanager")
     try:
-        response = secrets_manager_client.get_secret_value(SecretId=secret_arn)
-
-        if "SecretString" not in response:
-            raise RuntimeError(
-                f"Missing SecretString in response for {secret_arn}, please ensure the secret was not stored as binary data."
-            )
-        secret_string = response["SecretString"]
+        secret_string = get_secret_value_cached(secret_arn)
         json_secret = json.loads(secret_string)
 
         if "API_Key" not in json_secret:

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-01-07
+
+### Added
+
+- Remediation 2.1.4.2 to CIS300 playbook
+- KMS Caching Optimization: S3 Bucket Keys, SQS data key reuse (60-min cache), Secrets Manager caching (5-min TTL)
+
+### Fixed
+
+- Add fallback for finding data parsing in send_notifications.py
+- Update condition in RevokeUnauthorizedInboundRules.py to avoid removing restricted "All Traffic" rules
+
+### Security
+
+- Upgrade filelock dependency to 3.20.2 to mitigate [CVE-2025-68146](https://avd.aquasec.com/nvd/cve-2025-68146)
+
+### Changed
+
+- Update Status for Remediated Findings in Security Hub v2 by Default
+- Reduced KMS API calls by 69.5% (11.98M → 3.66M) and associated costs
+
 ## [3.0.2] - 2025-12-09
 
 ### Changed

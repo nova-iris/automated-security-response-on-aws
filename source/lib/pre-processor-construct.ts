@@ -44,6 +44,7 @@ export class PreProcessorConstruct extends Construct {
       encryption: QueueEncryption.KMS,
       encryptionMasterKey: props.kmsKey,
       enforceSSL: true,
+      dataKeyReuse: cdk.Duration.minutes(60),
     });
 
     this.queue = new sqs.Queue(this, 'PreProcessorQueue', {
@@ -55,6 +56,7 @@ export class PreProcessorConstruct extends Construct {
         queue: this.deadLetterQueue,
         maxReceiveCount: 10, // Messages can be retried 10 times before being sent to DLQ
       },
+      dataKeyReuse: cdk.Duration.minutes(60),
     });
 
     this.queue.addToResourcePolicy(

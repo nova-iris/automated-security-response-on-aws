@@ -12365,14 +12365,27 @@ def get_security_group_rules(security_group_id: str) -> list:
         exit("Failed to describe security group rules: " + str(e))
 
 
+def has_open_access(rule: dict) -> bool:
+    return ("CidrIpv4" in rule and rule["CidrIpv4"] == OPENIPV4) or (
+        "CidrIpv6" in rule and rule["CidrIpv6"] == OPENIPV6
+    )
+
+
 def check_unauthorized_ports(authorized_ports: set, rule: dict) -> bool:
     for port in range(rule["FromPort"], rule["ToPort"] + 1):
-        if (port not in authorized_ports) and (
-            ("CidrIpv4" in rule and rule["CidrIpv4"] == OPENIPV4)
-            or ("CidrIpv6" in rule and rule["CidrIpv6"] == OPENIPV6)
-        ):
+        if (port not in authorized_ports) and has_open_access(rule):
             return True
     return False
+
+
+def is_all_traffic_rule_with_open_access(rule: dict) -> bool:
+    return (rule["FromPort"] == rule["ToPort"] == -1) and has_open_access(rule)
+
+
+def should_revoke_rule(rule: dict, authorized_ports: set) -> bool:
+    return is_all_traffic_rule_with_open_access(rule) or check_unauthorized_ports(
+        authorized_ports, rule
+    )
 
 
 def revoke_unauthorized_rules(
@@ -12384,27 +12397,24 @@ def revoke_unauthorized_rules(
     ec2 = connect_to_ec2()
     rules_deleted = []
     for rule in security_group_rules:
-        if rule["IpProtocol"] in PROTOCOLS and not rule["IsEgress"]:
-            authorized_ports = (
-                authorized_tcp_ports
-                if rule["IpProtocol"] == "tcp"
-                else authorized_udp_ports
-            )
-            if (rule["FromPort"] == rule["ToPort"] == -1) or check_unauthorized_ports(
-                authorized_ports, rule
-            ):
-                try:
-                    ec2.revoke_security_group_ingress(
-                        GroupId=security_group_id,
-                        SecurityGroupRuleIds=[
-                            rule["SecurityGroupRuleId"],
-                        ],
-                    )
-                    rules_deleted.append(rule["SecurityGroupRuleId"])
-                except Exception as e:
-                    print(
-                        f"Failed to delete rule {rule['SecurityGroupRuleId']}: {str(e)}"
-                    )
+        if rule["IpProtocol"] not in PROTOCOLS or rule["IsEgress"]:
+            continue
+
+        authorized_ports = (
+            authorized_tcp_ports
+            if rule["IpProtocol"] == "tcp"
+            else authorized_udp_ports
+        )
+
+        if should_revoke_rule(rule, authorized_ports):
+            try:
+                ec2.revoke_security_group_ingress(
+                    GroupId=security_group_id,
+                    SecurityGroupRuleIds=[rule["SecurityGroupRuleId"]],
+                )
+                rules_deleted.append(rule["SecurityGroupRuleId"])
+            except Exception as e:
+                print(f"Failed to delete rule {rule['SecurityGroupRuleId']}: {str(e)}")
     return rules_deleted",
               },
               "maxAttempts": 3,

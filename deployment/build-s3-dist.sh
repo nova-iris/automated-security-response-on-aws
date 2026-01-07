@@ -217,9 +217,10 @@ main() {
 
     # Blueprint lambdas dependency layer
     pushd "$build_dist_dir"/lambda/blueprints
-    mkdir -p "$build_dist_dir"/lambda/blueprints/python
+    mkdir -p "$build_dist_dir"/lambda/blueprints/python/layer
     "$POETRY_COMMAND" export --without dev -f requirements.txt --output requirements.txt --without-hashes
     pip install -r "$source_dir"/blueprints/requirements.txt -t "$build_dist_dir"/lambda/blueprints/python
+    cp "$source_dir"/layer/*.py "$build_dist_dir"/lambda/blueprints/python/layer/
     zip -qr python.zip python/*
     rm -r python
     popd

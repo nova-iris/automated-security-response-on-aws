@@ -3,6 +3,15 @@
 
 import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
+
+beforeEach(() => {
+  localStorage.clear();
+});
+
+afterEach(() => {
+  server.resetHandlers();
+});
 
 import { http } from 'msw';
 import { ok } from '../../mocks/handlers.ts';
@@ -675,7 +684,83 @@ it('shows finding IDs in confirmation modal', async () => {
   expect(within(modal).getByText(/are you sure you want to suppress 7 findings/i)).toBeInTheDocument();
 });
 
-it('handles View History button click in success message', async () => {
+it('persists filter, sorting, and showSuppressed preferences across page navigation', async () => {
+  const findings = [
+    ...generateTestFindings(1, { suppressed: true, severity: 'HIGH' }),
+    ...generateTestFindings(4, { suppressed: true }),
+  ];
+  let lastSearchRequest: any = null;
+
+  server.use(
+    http.post(MOCK_SERVER_URL + ApiEndpoints.FINDINGS, async ({ request }) => {
+      lastSearchRequest = await request.json();
+      return await ok({ Findings: findings, NextToken: null });
+    }),
+  );
+
+  // ARRANGE - Render findings page and apply filters/sorting/toggle
+  const { renderResult } = renderAppContent({ initialRoute: '/findings' });
+  let withinMain = within(screen.getByTestId('main-content'));
+
+  // Enable show suppressed
+  const showSuppressedToggle = await withinMain.findByText('Show suppressed findings');
+  await userEvent.click(showSuppressedToggle);
+  await waitForElementToBeRemoved(await withinMain.findByText('Loading findings'), { timeout: 2000 });
+
+  // Apply filter using Cloudscape PropertyFilter dropdown
+  const filterInput = await withinMain.findByPlaceholderText('Search Findings');
+  await userEvent.click(filterInput);
+
+  // Wait for dropdown to appear and select "Severity" from the property dropdown
+  const dropdown = await screen.findByRole('listbox');
+  const severityOption = await within(dropdown).findByText('Severity');
+  await userEvent.click(severityOption);
+
+  // Select "=" operator
+  const operatorDropdown = await screen.findByRole('listbox');
+  const equalsOption = await within(operatorDropdown).findByText('=');
+  await userEvent.click(equalsOption);
+
+  // Select "HIGH" value
+  const valueDropdown = await screen.findByRole('listbox');
+  const highOption = await within(valueDropdown).findByText('HIGH');
+  await userEvent.click(highOption);
+
+  await waitFor(() => {
+    expect(lastSearchRequest?.Filters?.CompositeFilters?.[0]?.StringFilters?.[0]?.FieldName).toBe('severity');
+    // default sort should be desc
+    expect(lastSearchRequest?.SortCriteria?.[0]?.Field).toBe('securityHubUpdatedAtTime');
+    expect(lastSearchRequest?.SortCriteria?.[0]?.SortOrder).toBe('desc');
+  });
+
+  // Change sorting
+  const table = await withinMain.findByRole('table');
+  const updatedTimeHeader = await within(table).findByText('Security Hub Updated Time');
+  await userEvent.click(updatedTimeHeader);
+
+  await waitFor(() => {
+    expect(lastSearchRequest?.SortCriteria?.[0]?.Field).toBe('securityHubUpdatedAtTime');
+    expect(lastSearchRequest?.SortCriteria?.[0]?.SortOrder).toBe('asc');
+  });
+
+  // ACT - Navigate away and back
+  renderResult.unmount();
+  renderAppContent({ initialRoute: '/findings' });
+
+  // ASSERT - All preferences should be restored
+  withinMain = within(screen.getByTestId('main-content'));
+  await withinMain.findByRole('table');
+  await waitFor(() => {
+    expect(lastSearchRequest?.SortCriteria?.[0]?.Field).toBe('securityHubUpdatedAtTime');
+    expect(lastSearchRequest?.SortCriteria?.[0]?.SortOrder).toBe('asc');
+    expect(lastSearchRequest?.Filters?.CompositeFilters?.[0]?.StringFilters?.[0]?.FieldName).toBe('severity');
+    expect(lastSearchRequest?.Filters?.CompositeFilters?.[0]?.StringFilters?.[0]?.Filter?.Value).toBe('HIGH');
+  });
+  const toggle = await withinMain.findByRole('checkbox', { name: /show suppressed findings/i });
+  expect(toggle).toBeChecked();
+});
+
+it('navigates to history page when View History button is clicked', async () => {
   const findings = generateTestFindings(1, { suppressed: false, remediationStatus: 'NOT_STARTED' });
 
   server.use(
@@ -716,4 +801,133 @@ it('handles View History button click in success message', async () => {
   await waitFor(() => {
     expect(screen.queryByText('Findings to Remediate')).not.toBeInTheDocument();
   });
+});
+
+it('initializes with showSuppressed preference when persisted', async () => {
+  // ARRANGE - Set persisted preference with showSuppressed: true
+  localStorage.setItem('findingsTablePreferences', JSON.stringify({ showSuppressed: true, visibleContent: null }));
+
+  const findings = generateTestFindings(2, { suppressed: true });
+
+  server.use(
+    http.post(MOCK_SERVER_URL + ApiEndpoints.FINDINGS, async () => await ok({ Findings: findings, NextToken: null })),
+  );
+
+  // ACT
+  renderAppContent({ initialRoute: '/findings' });
+
+  // ASSERT
+  const withinMain = within(screen.getByTestId('main-content'));
+  const toggle = await withinMain.findByRole('checkbox', { name: /show suppressed findings/i });
+  expect(toggle).toBeChecked();
+});
+
+it('updates column preferences when confirmed', async () => {
+  const findings = generateTestFindings(2, { suppressed: false });
+
+  server.use(
+    http.post(MOCK_SERVER_URL + ApiEndpoints.FINDINGS, async () => await ok({ Findings: findings, NextToken: null })),
+  );
+
+  renderAppContent({ initialRoute: '/findings' });
+
+  const withinMain = within(screen.getByTestId('main-content'));
+  await waitForElementToBeRemoved(await withinMain.findByText('Loading findings'), { timeout: 2000 });
+
+  // ACT - Open preferences and confirm changes
+  const preferencesButton = await withinMain.findByRole('button', { name: /preferences/i });
+  await userEvent.click(preferencesButton);
+
+  const modal = await screen.findByRole('dialog');
+  const confirmButton = within(modal).getByRole('button', { name: 'Confirm' });
+  await userEvent.click(confirmButton);
+
+  // ASSERT
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+it('exports findings to CSV', async () => {
+  const findings = generateTestFindings(2, { suppressed: false });
+  const mockOpen = vi.fn();
+  window.open = mockOpen;
+
+  server.use(
+    http.post(MOCK_SERVER_URL + ApiEndpoints.FINDINGS, async () => await ok({ Findings: findings, NextToken: null })),
+    http.post(
+      MOCK_SERVER_URL + ApiEndpoints.FINDINGS + '/export',
+      async () => await ok({ downloadUrl: 'https://example.com/export.csv', status: 'complete' }),
+    ),
+  );
+
+  renderAppContent({ initialRoute: '/findings' });
+
+  const withinMain = within(screen.getByTestId('main-content'));
+  await waitForElementToBeRemoved(await withinMain.findByText('Loading findings'), { timeout: 2000 });
+
+  // ACT
+  const exportButton = await withinMain.findByRole('button', { name: /export to csv/i });
+  await userEvent.click(exportButton);
+
+  // ASSERT
+  await waitFor(() => {
+    expect(mockOpen).toHaveBeenCalledWith('https://example.com/export.csv', '_blank');
+  });
+});
+
+it('handles export error', async () => {
+  const findings = generateTestFindings(2, { suppressed: false });
+
+  server.use(
+    http.post(MOCK_SERVER_URL + ApiEndpoints.FINDINGS, async () => await ok({ Findings: findings, NextToken: null })),
+    http.post(MOCK_SERVER_URL + ApiEndpoints.FINDINGS + '/export', async () => {
+      return new Response(JSON.stringify({ message: 'Export failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }),
+  );
+
+  renderAppContent({ initialRoute: '/findings' });
+
+  const withinMain = within(screen.getByTestId('main-content'));
+  await waitForElementToBeRemoved(await withinMain.findByText('Loading findings'), { timeout: 2000 });
+
+  // ACT
+  const exportButton = await withinMain.findByRole('button', { name: /export to csv/i });
+  await userEvent.click(exportButton);
+
+  // ASSERT
+  expect(await withinMain.findByText(/failed to export findings/i)).toBeInTheDocument();
+});
+
+it('falls back to default sorting column when persisted sorting field is invalid', async () => {
+  // ARRANGE - persist an invalid sorting field
+  localStorage.setItem(
+    'FindingsTablePreferences',
+    JSON.stringify({
+      sortingField: 'invalidField',
+      sortingDescending: true,
+    }),
+  );
+
+  server.use(
+    http.post(
+      MOCK_SERVER_URL + ApiEndpoints.FINDINGS,
+      async () =>
+        await ok({
+          Findings: generateTestFindings(3, { suppressed: false, remediationStatus: 'NOT_STARTED' }),
+          NextToken: null,
+        }),
+    ),
+  );
+
+  // ACT
+  renderAppContent({ initialRoute: '/findings' });
+
+  // ASSERT - table should render without errors using default sorting
+  const withinMain = within(screen.getByTestId('main-content'));
+  await waitForElementToBeRemoved(await withinMain.findByText('Loading findings'), { timeout: 2000 });
+  expect(await withinMain.findByRole('table')).toBeInTheDocument();
 });

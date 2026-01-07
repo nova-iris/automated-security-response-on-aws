@@ -241,7 +241,9 @@ In the `remediation-runook-stack.ts`, each remediation has its own code block in
     }
 ```
 
-#### Step 6: Update Unit Tests
+#### Step 6: Build and update Unit Tests
+Please build your new remediation before run Unit Tests. Navigate to the **Build and Deploy** section below for instructions on *building* the solution with your new changes.
+
 We recommend updating and running the unit tests after adding a new remediation. 
 
 First, you must add any new regular expressions (that are not already added) into the `source/test/regex_registry.ts` file.

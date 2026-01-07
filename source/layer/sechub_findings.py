@@ -3,16 +3,19 @@
 import inspect
 import json
 import os
-from typing import Any, Union
+import re
+from typing import Any, Optional, TypedDict, Union
 
 from botocore.exceptions import ClientError
 from layer.awsapi_cached_client import AWSCachedClient
+from layer.powertools_logger import get_logger
 from layer.simple_validation import clean_ssm
 from layer.utils import publish_to_sns
 
 # Get AWS region from Lambda environment. If not present then we're not
 # running under lambda, so defaulting to us-east-1
 securityhub = None
+logger = get_logger("sechub_findings_layer")
 
 SOLUTION_BASE_PATH = "/Solutions/SO0111"
 
@@ -128,7 +131,9 @@ class Finding(object):
         """
         Update the finding_id workflow status to "RESOLVED"
         """
-        self.update_text(message, status="RESOLVED")
+        self.update_text_and_status(
+            f"[automated-security-response-on-aws] {message}", status="RESOLVED"
+        )
 
     def flag(self, message):
         """
@@ -137,44 +142,69 @@ class Finding(object):
         so multiple remediations are not initiated when automatic triggers are
         in use.
         """
-        self.update_text(message, status="NOTIFIED")
+        self.update_text_and_status(message, status="NOTIFIED")
 
-    def update_text(self, message, status=None):
+    def update_text_and_status(self, message, status=None):
         """
-        Update the finding_id text
+        Update the finding_id text and status
         """
 
         workflow_status = {}
+        securityhub_v2_enabled = (
+            os.getenv("SECURITY_HUB_V2_ENABLED", "false").lower() == "true"
+        )
         if status:
             workflow_status = {"Workflow": {"Status": status}}
 
-        try:
-            if "productv2" in self.details.get("ProductArn"):
-                get_securityhub().batch_update_findings_v2(
+        errors = []
+
+        product_arn = self.details.get("ProductArn", "")
+        product_arn_v1 = product_arn.replace("::productv2/", "::product/")
+        product_arn_v2 = product_arn.replace("::product/", "::productv2/")
+
+        if securityhub_v2_enabled:
+            try:
+                response = get_securityhub().batch_update_findings_v2(
                     FindingIdentifiers=[
                         {
                             "FindingInfoUid": self.details.get("Id"),
-                            "MetadataProductUid": self.details.get("ProductArn"),
+                            "MetadataProductUid": product_arn_v2,
                             "CloudAccountUid": self.account_id,
                         }
                     ],
                     Comment=message,
                     StatusId=ASFF_TO_OCSF_STATUS.get(status, 1),
                 )
-            else:
-                get_securityhub().batch_update_findings(
-                    FindingIdentifiers=[
-                        {
-                            "Id": self.details.get("Id"),
-                            "ProductArn": self.details.get("ProductArn"),
-                        }
-                    ],
-                    Note={"Text": message, "UpdatedBy": inspect.stack()[0][3]},
-                    **workflow_status,
-                )
+                if response["UnprocessedFindings"]:
+                    for unprocessed in response["UnprocessedFindings"]:
+                        error_code = unprocessed.get("ErrorCode", "Unknown")
+                        error_message = unprocessed.get(
+                            "ErrorMessage", "No error message"
+                        )
+                        errors.append(
+                            f"Security Hub v2 API: {error_code} - {error_message}"
+                        )
+            except Exception as e:
+                errors.append(f"Security Hub v2 API: {e}")
+
+        try:
+            get_securityhub().batch_update_findings(
+                FindingIdentifiers=[
+                    {
+                        "Id": self.details.get("Id"),
+                        "ProductArn": product_arn_v1,
+                    }
+                ],
+                Note={"Text": message, "UpdatedBy": inspect.stack()[0][3]},
+                **workflow_status,
+            )
         except Exception as e:
-            print(e)
-            raise
+            errors.append(f"Security Hub v1 API: {e}")
+
+        if errors:
+            logger.warning(
+                f"Failed to update Security Hub finding - {'; '.join(errors)}"
+            )
 
     def _get_security_standard_fields_from_arn(self, arn):
         standards_arn_parts = arn.split(":")[5].split("/")
@@ -204,11 +234,11 @@ class Finding(object):
             if exception_type in "ParameterNotFound":
                 return
             else:
-                print(UNHANDLED_CLIENT_ERROR + exception_type)
+                logger.error(UNHANDLED_CLIENT_ERROR + exception_type)
                 return
 
         except Exception as e:
-            print(UNHANDLED_CLIENT_ERROR + str(e))
+            logger.error(UNHANDLED_CLIENT_ERROR + str(e))
             return
 
     def _get_security_standard_abbreviation_from_ssm(self):
@@ -233,11 +263,11 @@ class Finding(object):
             if exception_type in "ParameterNotFound":
                 self.security_standard = "notfound"
             else:
-                print(UNHANDLED_CLIENT_ERROR + exception_type)
+                logger.error(UNHANDLED_CLIENT_ERROR + exception_type)
                 return
 
         except Exception as e:
-            print(UNHANDLED_CLIENT_ERROR + str(e))
+            logger.error(UNHANDLED_CLIENT_ERROR + str(e))
             return
 
     def _set_playbook_enabled(self):
@@ -266,11 +296,11 @@ class Finding(object):
             if exception_type in "ParameterNotFound":
                 self.playbook_enabled = "False"
             else:
-                print(UNHANDLED_CLIENT_ERROR + exception_type)
+                logger.error(UNHANDLED_CLIENT_ERROR + exception_type)
                 self.playbook_enabled = "False"
 
         except Exception as e:
-            print(UNHANDLED_CLIENT_ERROR + str(e))
+            logger.error(UNHANDLED_CLIENT_ERROR + str(e))
             self.playbook_enabled = "False"
 
 
@@ -279,6 +309,133 @@ class Finding(object):
 # ================
 class InvalidValue(Exception):
     pass
+
+
+class FindingInfo(TypedDict):
+    finding_id: str
+    finding_description: str
+    standard_name: str
+    standard_version: str
+    standard_control: str
+    title: str
+    region: str
+    account: str
+    finding_arn: str
+
+
+def get_control_id_from_finding_id(finding_id: str) -> Optional[str]:
+    # Finding ID structure depends on consolidation settings
+    # https://aws.amazon.com/blogs/security/consolidating-controls-in-security-hub-the-new-controls-view-and-consolidated-findings/
+
+    # Unconsolidated finding ID pattern
+    unconsolidated_pattern = r"^arn:(?:aws|aws-cn|aws-us-gov):securityhub:[a-z]{2}(?:-gov)?-[a-z]+-\d:\d{12}:subscription\/(.+)\/finding\/.+$"
+    unconsolidated_match = re.match(unconsolidated_pattern, finding_id)
+    if unconsolidated_match:
+        return unconsolidated_match.group(
+            1
+        )  # example: 'aws-foundational-security-best-practices/v/1.0.0/S3.1'
+
+    # Consolidated finding ID pattern
+    consolidated_pattern = r"^arn:(?:aws|aws-cn|aws-us-gov):securityhub:[a-z]{2}(?:-gov)?-[a-z]+-\d:\d{12}:(.+)\/finding\/.+$"
+    consolidated_match = re.match(consolidated_pattern, finding_id)
+    if consolidated_match:
+        return consolidated_match.group(1)  # example: 'security-control/Lambda.3'
+
+    return None
+
+
+def sanitize_control_id(control_id: str) -> str:
+    non_alphanumeric_or_allowed = re.compile(r"[^a-zA-Z0-9/.-]")
+    return non_alphanumeric_or_allowed.sub("", control_id)
+
+
+def get_finding_type(event: dict[str, Any]) -> str:
+    if "Finding" not in event:
+        return ""
+
+    finding_id = extract_finding_id(event)
+    if finding_id:
+        control_id_from_finding_id = get_control_id_from_finding_id(finding_id)
+        if control_id_from_finding_id:
+            return sanitize_control_id(control_id_from_finding_id)
+
+    control_id = extract_security_control_id(event)
+    if control_id:
+        return sanitize_control_id(control_id)
+
+    return ""
+
+
+def extract_security_control_id(event: dict[str, Any]) -> str:
+    if "Finding" not in event:
+        return ""
+
+    # Try to get SecurityControlId from Compliance first
+    compliance = event["Finding"].get("Compliance", {})
+    control_id = (
+        compliance.get("SecurityControlId", "") if isinstance(compliance, dict) else ""
+    )
+
+    # If empty, fallback to ProductFields.ControlId
+    if not control_id:
+        product_fields = event["Finding"].get("ProductFields", {})
+        control_id = (
+            product_fields.get("ControlId", "")
+            if isinstance(product_fields, dict)
+            else ""
+        )
+
+    return str(control_id)
+
+
+def extract_finding_id(event: dict[str, Any]) -> str:
+    if "Finding" not in event:
+        return ""
+
+    finding_id = event["Finding"].get("Id", "")
+
+    if not finding_id:
+        product_fields = event["Finding"].get("ProductFields", {})
+        finding_id = (
+            product_fields.get("aws/securityhub/FindingId", "")
+            if isinstance(product_fields, dict)
+            else ""
+        )
+
+    return str(finding_id)
+
+
+def extract_resource_id(event: dict[str, Any], resources: dict[str, Any]) -> str:
+    resource_id = resources.get("Id", "") if resources else ""
+
+    if not resource_id:
+        product_fields = event.get("Finding", {}).get("ProductFields", {})
+        if isinstance(product_fields, dict):
+            resources_field = product_fields.get("Resources:0/Id", "")
+            resource_id = str(resources_field) if resources_field else ""
+
+    return resource_id
+
+
+def extract_finding_info(
+    event: dict[str, Any],
+) -> tuple[Optional[Finding], Union[str, FindingInfo]]:
+    if "Finding" not in event:
+        return None, ""
+
+    finding = Finding(event["Finding"])
+    finding_info: FindingInfo = {
+        "finding_id": finding.uuid or "",
+        "finding_description": finding.description or "",
+        "standard_name": finding.standard_name or "",
+        "standard_version": finding.standard_version or "",
+        "standard_control": finding.standard_control or "",
+        "title": finding.title or "",
+        "region": finding.region or "",
+        "account": finding.account_id or "",
+        "finding_arn": finding.arn or "",
+    }
+    return finding, finding_info
 
 
 class ASRNotification(object):

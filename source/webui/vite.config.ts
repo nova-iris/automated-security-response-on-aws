@@ -32,6 +32,7 @@ const config: VitestUserConfig & UserConfig = {
     coverage: coverageConfig,
     maxConcurrency: 1, // set to 1 to run tests serially, one file at a time
     testTimeout: 25000, // 25s test timeout unless specified otherwise in the test suite
+    silent: true, // suppress console output during tests
   },
   plugins: [react()],
   server: {

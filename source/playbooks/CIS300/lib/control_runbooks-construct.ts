@@ -11,6 +11,7 @@ import * as cis_300_1_14 from '../ssmdocs/CIS300_1.14';
 import * as cis_300_1_17 from '../ssmdocs/CIS300_1.17';
 import * as cis_300_2_1_1 from '../ssmdocs/CIS300_2.1.1';
 import * as cis_300_2_1_4_1 from '../ssmdocs/CIS300_2.1.4.1';
+import * as cis_300_2_1_4_2 from '../ssmdocs/CIS300_2.1.4.2';
 import * as cis_300_2_2_1 from '../ssmdocs/CIS300_2.2.1';
 import * as cis_300_2_3_2 from '../ssmdocs/CIS300_2.3.2';
 import * as cis_300_2_3_3 from '../ssmdocs/CIS300_2.3.3';
@@ -55,6 +56,7 @@ const controlRunbooksRecord: Record<string, any> = {
   '2.3.3': cis_300_2_3_3.createControlRunbook,
   '2.3.2': cis_300_2_3_2.createControlRunbook,
   '2.1.4.1': cis_300_2_1_4_1.createControlRunbook, // NOSONAR This is not an IP Address.
+  '2.1.4.2': cis_300_2_1_4_2.createControlRunbook, // NOSONAR This is not an IP Address.
   '2.1.1': cis_300_2_1_1.createControlRunbook,
 };
 

@@ -10,7 +10,15 @@ import boto3
 from aws_lambda_context import LambdaContext
 from botocore.config import Config
 from moto import mock_aws
-from servicenow_ticket_generator import get_account_alias, lambda_handler
+from servicenow_ticket_generator import (
+    ProjectInfo,
+    RemediationInfo,
+    create_ticket,
+    get_account_alias,
+    get_api_credentials,
+    get_post_endpoint_from_project_info,
+    lambda_handler,
+)
 
 REGION = "us-east-1"
 FAKE_API_CREDENTIALS = {"API_Key": "my-api-key"}
@@ -192,3 +200,121 @@ def test_get_account_alias_error():
     account_alias = get_account_alias(MOTO_ACCOUNT_ID)
 
     assert account_alias == MOTO_ACCOUNT_ID
+
+
+def test_get_post_endpoint_from_project_info():
+    # ARRANGE
+    project_info: ProjectInfo = {
+        "InstanceURI": "https://test.service-now.com",
+        "TableName": "incident",
+    }
+
+    # ACT
+    result = get_post_endpoint_from_project_info(project_info)
+
+    # ASSERT
+    assert result == "https://test.service-now.com/api/now/table/incident"
+
+
+def test_get_post_endpoint_invalid_uri():
+    # ARRANGE
+    project_info: ProjectInfo = {
+        "InstanceURI": "https://invalid.com",
+        "TableName": "incident",
+    }
+
+    # ACT & ASSERT
+    try:
+        get_post_endpoint_from_project_info(project_info)
+        assert False, "Expected RuntimeError"
+    except RuntimeError:
+        pass
+
+
+@patch("servicenow_ticket_generator.get_secret_value_cached")
+def test_get_api_credentials(mock_get_secret):
+    # ARRANGE
+    mock_get_secret.return_value = '{"API_Key": "test-key"}'
+
+    # ACT
+    result = get_api_credentials("test-arn")
+
+    # ASSERT
+    assert result == "test-key"
+
+
+@patch("servicenow_ticket_generator.get_secret_value_cached")
+def test_get_api_credentials_missing_key(mock_get_secret):
+    # ARRANGE
+    mock_get_secret.return_value = "{}"
+
+    # ACT & ASSERT
+    try:
+        get_api_credentials("test-arn")
+        assert False, "Expected RuntimeError"
+    except RuntimeError:
+        pass
+
+
+@patch("servicenow_ticket_generator.connect_to_service")
+def test_get_account_alias_with_connect_mock(mock_connect):
+    # ARRANGE
+    mock_org = MagicMock()
+    mock_org.describe_account.return_value = {"Account": {"Name": "TestAccount"}}
+    mock_connect.return_value = mock_org
+
+    # ACT
+    result = get_account_alias("123456789012")
+
+    # ASSERT
+    assert result == "TestAccount"
+
+
+@patch("servicenow_ticket_generator.connect_to_service")
+def test_get_account_alias_error_with_connect_mock(mock_connect):
+    # ARRANGE
+    mock_connect.side_effect = Exception("Error")
+
+    # ACT
+    result = get_account_alias("123456789012")
+
+    # ASSERT
+    assert result == "123456789012"
+
+
+@patch("urllib.request.urlopen")
+def test_create_ticket_success(mock_urlopen):
+    # ARRANGE
+    mock_response = MagicMock()
+    mock_response.__enter__.return_value = mock_response
+    mock_response.getcode.return_value = 201
+    mock_response.read.return_value = json.dumps(
+        {"result": {"sys_id": "test-id"}}
+    ).encode("utf-8")
+    mock_urlopen.return_value = mock_response
+
+    remediation_info: RemediationInfo = {
+        "Message": "Test",
+        "FindingDescription": "Test",
+        "FindingSeverity": "HIGH",
+        "SecurityControlId": "TEST.1",
+        "FindingAccountId": "123456789012",
+        "AffectedResource": "test",
+    }
+    project_info: ProjectInfo = {
+        "InstanceURI": "https://test.service-now.com",
+        "TableName": "incident",
+    }
+
+    # ACT
+    result = create_ticket(
+        remediation_info,
+        project_info,
+        "https://test.service-now.com/api/now/table/incident",
+        "test-key",
+        "TestAccount",
+    )
+
+    # ASSERT
+    assert result["Ok"] is True
+    assert "test-id" in result["TicketURL"]

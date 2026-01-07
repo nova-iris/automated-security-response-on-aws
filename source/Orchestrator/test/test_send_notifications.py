@@ -3,26 +3,28 @@
 import copy
 import os
 from datetime import datetime, timedelta
-from typing import cast
+from typing import Any, cast
 
 import boto3
 import pytest
-from moto import mock_aws
-from send_notifications import (
-    Event,
-    RemediationUpdateRequest,
-    _extract_security_control_id,
-    _is_notified_workflow,
-    _is_resolved_item,
-    calculate_history_ttl_timestamp,
-    create_and_send_cloudwatch_metrics,
+from layer.event_transformers import Event, is_notified_workflow, is_resolved_item
+from layer.history_repository import RemediationUpdateRequest, calculate_ttl_timestamp
+from layer.remediation_data_service import (
+    map_remediation_status,
+    update_remediation_status_and_history,
+)
+from layer.sechub_findings import (
+    extract_security_control_id,
     get_control_id_from_finding_id,
     get_finding_type,
-    lambda_handler,
-    map_remediation_status,
     sanitize_control_id,
+)
+from layer.test.conftest import create_dynamodb_tables  # type: ignore[import-not-found]
+from moto import mock_aws
+from send_notifications import (
+    create_and_send_cloudwatch_metrics,
+    lambda_handler,
     set_message_prefix_and_suffix,
-    update_remediation_status_and_history,
 )
 
 default_event = {
@@ -88,48 +90,23 @@ def setup_ssm_parameters():
 
 
 def setup_dynamodb_tables():
-    dynamodb = boto3.client("dynamodb", region_name="us-east-1")
-
-    # Create findings table
-    dynamodb.create_table(
-        TableName="test-findings-table",
-        KeySchema=[
-            {"AttributeName": "findingType", "KeyType": "HASH"},
-            {"AttributeName": "findingId", "KeyType": "RANGE"},
-        ],
-        AttributeDefinitions=[
-            {"AttributeName": "findingType", "AttributeType": "S"},
-            {"AttributeName": "findingId", "AttributeType": "S"},
-        ],
-        BillingMode="PAY_PER_REQUEST",
-    )
-
-    # Create history table
-    dynamodb.create_table(
-        TableName="test-history-table",
-        KeySchema=[
-            {"AttributeName": "findingType", "KeyType": "HASH"},
-            {"AttributeName": "findingId#executionId", "KeyType": "RANGE"},
-        ],
-        AttributeDefinitions=[
-            {"AttributeName": "findingType", "AttributeType": "S"},
-            {"AttributeName": "findingId#executionId", "AttributeType": "S"},
-        ],
-        BillingMode="PAY_PER_REQUEST",
-    )
-
+    dynamodb = create_dynamodb_tables()
     os.environ["FINDINGS_TABLE_NAME"] = "test-findings-table"
     os.environ["HISTORY_TABLE_NAME"] = "test-history-table"
+    return dynamodb
 
 
-def setup(mocker):
+def setup(mocker, mock_cloudwatch_metrics=True):
     sharr_notification_stub = mocker.stub()
     sharr_notification_stub.notify = mocker.Mock()
     mocker.patch(
         "send_notifications.sechub_findings.ASRNotification",
         return_value=sharr_notification_stub,
     )
-    mocker.patch("send_notifications.CloudWatchMetrics.send_metric", return_value=None)
+    if mock_cloudwatch_metrics:
+        mocker.patch(
+            "send_notifications.CloudWatchMetrics.send_metric", return_value=None
+        )
     mocker.patch("send_notifications.get_account_alias", return_value="myAccount")
 
     mock_finding = mocker.Mock()
@@ -296,7 +273,7 @@ def test_send_operational_metrics_with_event_type(mocker):
     mock_urlopen = mocker.patch("layer.metrics.urlopen")
     sharr_notification_stub = setup(mocker)
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["EventType"] = "CustomAction"
     event["Notification"][
         "StepFunctionsExecutionId"
@@ -318,7 +295,7 @@ def test_send_operational_metrics_without_event_type(mocker):
     mock_urlopen = mocker.patch("layer.metrics.urlopen")
     sharr_notification_stub = setup(mocker)
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["Notification"][
         "StepFunctionsExecutionId"
     ] = "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id"
@@ -336,7 +313,7 @@ def test_send_operational_metrics_without_event_type(mocker):
 def test_calculate_history_ttl_timestamp():
 
     timestamp = "2024-01-01T00:00:00Z"
-    ttl = calculate_history_ttl_timestamp(timestamp)
+    ttl = calculate_ttl_timestamp(timestamp)
 
     expected_ttl = int(
         (
@@ -399,7 +376,8 @@ def test_update_remediation_status_and_history_success(mocker):
     setup_dynamodb_tables()
 
     mocker.patch(
-        "send_notifications._try_update_with_existing_history", return_value=True
+        "layer.remediation_data_service.try_update_with_existing_history",
+        return_value=True,
     )
 
     request = RemediationUpdateRequest(
@@ -418,9 +396,10 @@ def test_update_remediation_status_and_history_fallback(mocker):
     setup_dynamodb_tables()
 
     mocker.patch(
-        "send_notifications._try_update_with_existing_history", return_value=False
+        "layer.remediation_data_service.try_update_with_existing_history",
+        return_value=False,
     )
-    mocker.patch("send_notifications._create_history_with_finding_update")
+    mocker.patch("layer.remediation_data_service.create_history_with_finding_update")
 
     request = RemediationUpdateRequest(
         finding_id="test-finding-id",
@@ -440,7 +419,7 @@ def test_lambda_handler_with_remediation_update(mocker):
     sharr_notification_stub = setup(mocker)
     mocker.patch("send_notifications.update_remediation_status_and_history")
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["Notification"][
         "StepFunctionsExecutionId"
     ] = "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id"
@@ -462,7 +441,7 @@ def test_update_finding_remediation_status_with_finding_type(mocker):
     )
     setup(mocker)
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["Notification"][
         "StepFunctionsExecutionId"
     ] = "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id"
@@ -508,7 +487,7 @@ def test_update_finding_remediation_status_missing_finding_type(mocker):
     )
     setup(mocker)
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["Notification"][
         "StepFunctionsExecutionId"
     ] = "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id"
@@ -581,84 +560,112 @@ def test_sanitize_control_id():
 def test_extract_security_control_id_fallback():
     event_with_compliance = cast(
         Event,
-        {
-            "Finding": {
-                "Compliance": {"SecurityControlId": "S3.13"},
-                "ProductFields": {"ControlId": "S3.14"},
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Compliance": {"SecurityControlId": "S3.13"},
+                    "ProductFields": {"ControlId": "S3.14"},
+                }
+            },
+        ),
     )
-    result = _extract_security_control_id(event_with_compliance)
+    result = extract_security_control_id(
+        cast(dict[str, Any], cast(object, event_with_compliance))
+    )
     assert result == "S3.13"
 
     event_with_fallback = cast(
         Event,
-        {
-            "Finding": {
-                "Compliance": {"SecurityControlId": ""},
-                "ProductFields": {"ControlId": "S3.14"},
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Compliance": {"SecurityControlId": ""},
+                    "ProductFields": {"ControlId": "S3.14"},
+                }
+            },
+        ),
     )
-    result = _extract_security_control_id(event_with_fallback)
+    result = extract_security_control_id(
+        cast(dict[str, Any], cast(object, event_with_fallback))
+    )
     assert result == "S3.14"
 
-    event_no_finding: Event = cast(Event, {})
-    result = _extract_security_control_id(event_no_finding)
+    event_no_finding: Event = cast(Event, cast(object, {}))
+    result = extract_security_control_id(
+        cast(dict[str, Any], cast(object, event_no_finding))
+    )
     assert result == ""
 
 
 def test_get_finding_type_comprehensive():
     event_with_finding_id = cast(
         Event,
-        {
-            "Finding": {
-                "Id": "arn:aws:securityhub:us-east-1:123456789012:security-control/S3.15/finding/abc123",
-                "Compliance": {"SecurityControlId": "S3.13"},
-                "ProductFields": {"ControlId": "S3.14"},
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Id": "arn:aws:securityhub:us-east-1:123456789012:security-control/S3.15/finding/abc123",
+                    "Compliance": {"SecurityControlId": "S3.13"},
+                    "ProductFields": {"ControlId": "S3.14"},
+                }
+            },
+        ),
     )
-    result = get_finding_type(event_with_finding_id)
+    result = get_finding_type(cast(dict[str, Any], cast(object, event_with_finding_id)))
     assert result == "security-control/S3.15"
 
     event_compliance_fallback = cast(
         Event,
-        {
-            "Finding": {
-                "Id": "invalid-finding-id",
-                "Compliance": {"SecurityControlId": "S3.13"},
-                "ProductFields": {"ControlId": "S3.14"},
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Id": "invalid-finding-id",
+                    "Compliance": {"SecurityControlId": "S3.13"},
+                    "ProductFields": {"ControlId": "S3.14"},
+                }
+            },
+        ),
     )
-    result = get_finding_type(event_compliance_fallback)
+    result = get_finding_type(
+        cast(dict[str, Any], cast(object, event_compliance_fallback))
+    )
     assert result == "S3.13"
 
     event_product_fields_fallback = cast(
         Event,
-        {
-            "Finding": {
-                "Id": "invalid-finding-id",
-                "Compliance": {"SecurityControlId": ""},
-                "ProductFields": {"ControlId": "S3.14"},
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Id": "invalid-finding-id",
+                    "Compliance": {"SecurityControlId": ""},
+                    "ProductFields": {"ControlId": "S3.14"},
+                }
+            },
+        ),
     )
-    result = get_finding_type(event_product_fields_fallback)
+    result = get_finding_type(
+        cast(dict[str, Any], cast(object, event_product_fields_fallback))
+    )
     assert result == "S3.14"
 
     event_no_control_id = cast(
         Event,
-        {
-            "Finding": {
-                "Id": "invalid-finding-id",
-                "Compliance": {},
-                "ProductFields": {},
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Id": "invalid-finding-id",
+                    "Compliance": {},
+                    "ProductFields": {},
+                }
+            },
+        ),
     )
-    result = get_finding_type(event_no_control_id)
+    result = get_finding_type(cast(dict[str, Any], cast(object, event_no_control_id)))
     assert result == ""
 
 
@@ -666,104 +673,128 @@ def test_is_notified_workflow():
     # Test NOTIFIED workflow with regular event type
     notified_event = cast(
         Event,
-        {
-            "Finding": {
-                "Workflow": {"Status": "NOTIFIED"},
-                "Id": "test-finding-id",
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Workflow": {"Status": "NOTIFIED"},
+                    "Id": "test-finding-id",
+                },
+                "EventType": "Security Hub Findings - Imported",
             },
-            "EventType": "Security Hub Findings - Imported",
-        },
+        ),
     )
-    assert _is_notified_workflow(notified_event) is True
+    assert is_notified_workflow(notified_event) is True
 
     # Test NOTIFIED workflow with Custom Action event type - should return False
     notified_custom_action_event = cast(
         Event,
-        {
-            "Finding": {
-                "Workflow": {"Status": "NOTIFIED"},
-                "Id": "test-finding-id",
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Workflow": {"Status": "NOTIFIED"},
+                    "Id": "test-finding-id",
+                },
+                "EventType": "Security Hub Findings - Custom Action",
             },
-            "EventType": "Security Hub Findings - Custom Action",
-        },
+        ),
     )
-    assert _is_notified_workflow(notified_custom_action_event) is False
+    assert is_notified_workflow(notified_custom_action_event) is False
 
     # Test NOTIFIED workflow with API Action event type - should return False
     notified_api_action_event = cast(
         Event,
-        {
-            "Finding": {
-                "Workflow": {"Status": "NOTIFIED"},
-                "Id": "test-finding-id",
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Workflow": {"Status": "NOTIFIED"},
+                    "Id": "test-finding-id",
+                },
+                "EventType": "Security Hub Findings - API Action",
             },
-            "EventType": "Security Hub Findings - API Action",
-        },
+        ),
     )
-    assert _is_notified_workflow(notified_api_action_event) is False
+    assert is_notified_workflow(notified_api_action_event) is False
 
     # Test NOTIFIED workflow without EventType - should return True
     notified_no_event_type = cast(
         Event,
-        {
-            "Finding": {
-                "Workflow": {"Status": "NOTIFIED"},
-                "Id": "test-finding-id",
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Workflow": {"Status": "NOTIFIED"},
+                    "Id": "test-finding-id",
+                }
+            },
+        ),
     )
-    assert _is_notified_workflow(notified_no_event_type) is True
+    assert is_notified_workflow(notified_no_event_type) is True
 
     # Test non-NOTIFIED workflow
     new_event = cast(
         Event,
-        {
-            "Finding": {
-                "Workflow": {"Status": "NEW"},
-                "Id": "test-finding-id",
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Workflow": {"Status": "NEW"},
+                    "Id": "test-finding-id",
+                }
+            },
+        ),
     )
-    assert _is_notified_workflow(new_event) is False
+    assert is_notified_workflow(new_event) is False
 
     # Test missing workflow
     no_workflow_event = cast(
         Event,
-        {
-            "Finding": {
-                "Id": "test-finding-id",
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Id": "test-finding-id",
+                }
+            },
+        ),
     )
-    assert _is_notified_workflow(no_workflow_event) is False
+    assert is_notified_workflow(no_workflow_event) is False
 
     # Test empty workflow
     empty_workflow_event = cast(
         Event,
-        {
-            "Finding": {
-                "Workflow": {},
-                "Id": "test-finding-id",
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Workflow": {},
+                    "Id": "test-finding-id",
+                }
+            },
+        ),
     )
-    assert _is_notified_workflow(empty_workflow_event) is False
+    assert is_notified_workflow(empty_workflow_event) is False
 
     # Test no finding
-    no_finding_event = cast(Event, {})
-    assert _is_notified_workflow(no_finding_event) is False
+    no_finding_event = cast(Event, cast(object, {}))
+    assert is_notified_workflow(no_finding_event) is False
 
     # Test workflow is not a dict
     invalid_workflow_event = cast(
         Event,
-        {
-            "Finding": {
-                "Workflow": "NOTIFIED",  # String instead of dict
-                "Id": "test-finding-id",
-            }
-        },
+        cast(
+            object,
+            {
+                "Finding": {
+                    "Workflow": "NOTIFIED",  # String instead of dict
+                    "Id": "test-finding-id",
+                }
+            },
+        ),
     )
-    assert _is_notified_workflow(invalid_workflow_event) is False
+    assert is_notified_workflow(invalid_workflow_event) is False
 
 
 @mock_aws
@@ -776,7 +807,7 @@ def test_lambda_handler_with_product_fields_fallback(mocker):
         "send_notifications.update_remediation_status_and_history"
     )
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["Finding"][
         "Id"
     ] = "arn:aws:securityhub:us-east-1:123456789012:finding/custom-format/test-id"
@@ -809,7 +840,7 @@ def test_lambda_handler_notified_workflow_skips_database_updates(mocker):
         "send_notifications.update_remediation_status_and_history"
     )
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["Finding"]["Workflow"] = {
         "Status": "NOTIFIED"
     }  # Set NOTIFIED workflow status
@@ -834,7 +865,7 @@ def test_lambda_handler_non_notified_workflow_updates_database(mocker):
         "send_notifications.update_remediation_status_and_history"
     )
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["Finding"]["Workflow"] = {"Status": "NEW"}  # Set non-NOTIFIED workflow status
     event["Notification"][
         "StepFunctionsExecutionId"
@@ -848,7 +879,7 @@ def test_lambda_handler_non_notified_workflow_updates_database(mocker):
 
 
 def test_security_hub_v2_enabled_finding_link(mocker):
-    os.environ["SECURITY_HUB_V2_ENABLED"] = "true"
+    mocker.patch.dict("os.environ", {"SECURITY_HUB_V2_ENABLED": "true"})
     event = default_event
     sharr_notification_stub = setup(mocker)
 
@@ -860,26 +891,26 @@ def test_security_hub_v2_enabled_finding_link(mocker):
         == "https://console.aws.amazon.com/securityhub/v2/home?region=us-east-1#/findings?search=finding_info.uid%3D%255Coperator%255C%253AEQUALS%255C%253Aarn%3Aaws%3Asecurityhub%3Aus-east-1%3A111111111111%3Asubscription%2Fcis-aws-foundations-benchmark%2Fv%2F3.0.0%2Ffoobar.1%2Ffinding%2Fc605d623-ee6b-460d-9deb-0e8c0551d155"
     )
 
-    # Clean up
-    del os.environ["SECURITY_HUB_V2_ENABLED"]
-
 
 def test_should_override_to_success_with_not_new_and_resolved():
     event = cast(
         Event,
-        {
-            "Notification": {
-                "State": "NOT_NEW",
-                "Message": "Finding Workflow State is not NEW (RESOLVED).",
+        cast(
+            object,
+            {
+                "Notification": {
+                    "State": "NOT_NEW",
+                    "Message": "Finding Workflow State is not NEW (RESOLVED).",
+                },
+                "Finding": {
+                    "Id": "arn:aws:securityhub:us-east-1:111111111111:subscription/test/finding/123",
+                    "Workflow": {"Status": "RESOLVED"},
+                },
             },
-            "Finding": {
-                "Id": "arn:aws:securityhub:us-east-1:111111111111:subscription/test/finding/123",
-                "Workflow": {"Status": "RESOLVED"},
-            },
-        },
+        ),
     )
 
-    result = _is_resolved_item(event)
+    result = is_resolved_item(event)
 
     assert result is True
 
@@ -887,19 +918,22 @@ def test_should_override_to_success_with_not_new_and_resolved():
 def test_should_override_to_success_with_different_state():
     event = cast(
         Event,
-        {
-            "Notification": {
-                "State": "QUEUED",
-                "Message": "Remediation queued",
+        cast(
+            object,
+            {
+                "Notification": {
+                    "State": "QUEUED",
+                    "Message": "Remediation queued",
+                },
+                "Finding": {
+                    "Id": "arn:aws:securityhub:us-east-1:111111111111:subscription/test/finding/123",
+                    "Workflow": {"Status": "RESOLVED"},
+                },
             },
-            "Finding": {
-                "Id": "arn:aws:securityhub:us-east-1:111111111111:subscription/test/finding/123",
-                "Workflow": {"Status": "RESOLVED"},
-            },
-        },
+        ),
     )
 
-    result = _is_resolved_item(event)
+    result = is_resolved_item(event)
 
     assert result is False
 
@@ -907,19 +941,22 @@ def test_should_override_to_success_with_different_state():
 def test_should_override_to_success_with_different_workflow_status():
     event = cast(
         Event,
-        {
-            "Notification": {
-                "State": "NOT_NEW",
-                "Message": "Finding Workflow State is not NEW (NOTIFIED).",
+        cast(
+            object,
+            {
+                "Notification": {
+                    "State": "NOT_NEW",
+                    "Message": "Finding Workflow State is not NEW (NOTIFIED).",
+                },
+                "Finding": {
+                    "Id": "arn:aws:securityhub:us-east-1:111111111111:subscription/test/finding/123",
+                    "Workflow": {"Status": "NOTIFIED"},
+                },
             },
-            "Finding": {
-                "Id": "arn:aws:securityhub:us-east-1:111111111111:subscription/test/finding/123",
-                "Workflow": {"Status": "NOTIFIED"},
-            },
-        },
+        ),
     )
 
-    result = _is_resolved_item(event)
+    result = is_resolved_item(event)
 
     assert result is False
 
@@ -927,17 +964,23 @@ def test_should_override_to_success_with_different_workflow_status():
 def test_should_override_to_success_without_finding():
     event = cast(
         Event,
-        {
-            "Notification": {
-                "State": "NOT_NEW",
-                "Message": "Test message",
+        cast(
+            object,
+            {
+                "Notification": {
+                    "State": "NOT_NEW",
+                    "Message": "Test message",
+                },
             },
-        },
+        ),
     )
 
-    result = _is_resolved_item(event)
+    result = is_resolved_item(event)
 
     assert result is False
+
+    del os.environ["FINDINGS_TABLE_NAME"]
+    del os.environ["HISTORY_TABLE_NAME"]
 
 
 @mock_aws
@@ -950,7 +993,7 @@ def test_lambda_handler_overrides_status_for_resolved_workflow(mocker):
         "send_notifications.update_remediation_status_and_history"
     )
 
-    event = cast(Event, copy.deepcopy(default_event))
+    event = cast(Event, cast(object, copy.deepcopy(default_event)))
     event["Notification"]["State"] = "NOT_NEW"
     event["Notification"]["Message"] = "Finding Workflow State is not NEW (RESOLVED)."
     event["Finding"]["Workflow"] = {"Status": "RESOLVED"}
@@ -967,295 +1010,6 @@ def test_lambda_handler_overrides_status_for_resolved_workflow(mocker):
     call_args = mock_update.call_args[0][0]
     assert call_args.remediation_status == "SUCCESS"
     assert call_args.error is None
-
-
-def test_extract_finding_fields():
-    from send_notifications import _extract_finding_fields
-
-    item = {
-        "accountId": {"S": "123456789012"},
-        "resourceId": {"S": "i-1234567890abcdef0"},
-        "resourceType": {"S": "AwsEc2Instance"},
-        "resourceTypeNormalized": {"S": "EC2Instance"},
-        "severity": {"S": "HIGH"},
-        "region": {"S": "us-east-1"},
-        "lastUpdatedBy": {"S": "Automated"},
-    }
-
-    result = _extract_finding_fields(item)
-
-    assert result["accountId"] == "123456789012"
-    assert result["resourceId"] == "i-1234567890abcdef0"
-    assert result["resourceType"] == "AwsEc2Instance"
-    assert result["resourceTypeNormalized"] == "EC2Instance"
-    assert result["severity"] == "HIGH"
-    assert result["region"] == "us-east-1"
-    assert result["lastUpdatedBy"] == "Automated"
-
-
-def test_extract_finding_fields_partial():
-    from send_notifications import _extract_finding_fields
-
-    item = {
-        "accountId": {"S": "123456789012"},
-        "severity": {"S": "MEDIUM"},
-    }
-
-    result = _extract_finding_fields(item)
-
-    assert result["accountId"] == "123456789012"
-    assert result["severity"] == "MEDIUM"
-    assert "resourceId" not in result
-    assert "resourceType" not in result
-
-
-def test_extract_finding_fields_empty():
-    from typing import Any
-
-    from send_notifications import _extract_finding_fields
-
-    item: dict[str, Any] = {}
-    result = _extract_finding_fields(item)
-
-    assert result == {}
-
-
-def test_merge_finding_data_into_item():
-    from send_notifications import FindingData, _merge_finding_data_into_item
-
-    item = {
-        "findingId": {"S": "test-finding-id"},
-        "accountId": {"S": "original-account"},
-    }
-
-    finding_data: FindingData = {
-        "accountId": "123456789012",
-        "resourceId": "i-1234567890abcdef0",
-        "resourceType": "AwsEc2Instance",
-        "severity": "HIGH",
-        "region": "us-west-2",
-    }
-
-    _merge_finding_data_into_item(item, finding_data)
-
-    # Should override existing accountId
-    assert item["accountId"] == {"S": "123456789012"}
-    # Should add new fields
-    assert item["resourceId"] == {"S": "i-1234567890abcdef0"}
-    assert item["resourceType"] == {"S": "AwsEc2Instance"}
-    assert item["severity"] == {"S": "HIGH"}
-    assert item["region"] == {"S": "us-west-2"}
-    # Should preserve original fields
-    assert item["findingId"] == {"S": "test-finding-id"}
-
-
-def test_merge_finding_data_into_item_partial():
-    from send_notifications import FindingData, _merge_finding_data_into_item
-
-    item = {"findingId": {"S": "test-finding-id"}}
-
-    finding_data: FindingData = {
-        "accountId": "123456789012",
-        "severity": "LOW",
-    }
-
-    _merge_finding_data_into_item(item, finding_data)
-
-    assert item["accountId"] == {"S": "123456789012"}
-    assert item["severity"] == {"S": "LOW"}
-    assert "resourceId" not in item
-
-
-def test_parse_orchestrator_input_valid_json():
-    """Test _parse_orchestrator_input with valid JSON."""
-    from send_notifications import _parse_orchestrator_input
-
-    input_str = '{"detail": {"findings": [{"Id": "test-id"}]}}'
-    result = _parse_orchestrator_input(input_str)
-
-    assert result == {"detail": {"findings": [{"Id": "test-id"}]}}
-
-
-def test_parse_orchestrator_input_invalid_json():
-    from send_notifications import _parse_orchestrator_input
-
-    input_str = "invalid json {{"
-    result = _parse_orchestrator_input(input_str)
-
-    assert result == {}
-
-
-def test_parse_orchestrator_input_empty_string():
-    from send_notifications import _parse_orchestrator_input
-
-    input_str = ""
-    result = _parse_orchestrator_input(input_str)
-
-    assert result == {}
-
-
-def test_add_optional_finding_fields():
-    from send_notifications import Event, _add_optional_finding_fields
-
-    transformed_event: Event = {
-        "Notification": {
-            "Message": "test",
-            "State": "SUCCESS",
-        },
-        "Finding": {"Id": "test-id"},
-    }
-
-    finding_data = {
-        "AwsAccountId": "123456789012",
-        "Region": "us-east-1",
-        "Resources": [{"Id": "i-123", "Type": "AwsEc2Instance"}],
-        "Severity": {"Label": "HIGH"},
-        "ProductFields": {"StandardsGuideArn": "arn:aws:securityhub:::ruleset/cis"},
-        "Compliance": {"SecurityControlId": "EC2.1"},
-    }
-
-    _add_optional_finding_fields(transformed_event, finding_data)
-
-    assert transformed_event["AccountId"] == "123456789012"
-    assert transformed_event["Region"] == "us-east-1"
-    assert transformed_event["Resources"] == [{"Id": "i-123", "Type": "AwsEc2Instance"}]
-    assert transformed_event["Severity"] == {"Label": "HIGH"}
-    assert transformed_event["SecurityStandard"] == "arn:aws:securityhub:::ruleset/cis"
-    assert transformed_event["ControlId"] == "EC2.1"
-
-
-def test_add_optional_finding_fields_partial():
-    """Test _add_optional_finding_fields with partial data."""
-    from send_notifications import Event, _add_optional_finding_fields
-
-    transformed_event: Event = {
-        "Notification": {
-            "Message": "test",
-            "State": "SUCCESS",
-        },
-        "Finding": {"Id": "test-id"},
-    }
-
-    finding_data = {
-        "AwsAccountId": "123456789012",
-        "Region": "us-west-2",
-    }
-
-    _add_optional_finding_fields(transformed_event, finding_data)
-
-    assert transformed_event["AccountId"] == "123456789012"
-    assert transformed_event["Region"] == "us-west-2"
-    assert "Resources" not in transformed_event
-    assert "Severity" not in transformed_event
-    assert "SecurityStandard" not in transformed_event
-    assert "ControlId" not in transformed_event
-
-
-def test_add_optional_finding_fields_nested_missing():
-    """Test _add_optional_finding_fields when nested fields are missing."""
-    from send_notifications import Event, _add_optional_finding_fields
-
-    transformed_event: Event = {
-        "Notification": {
-            "Message": "test",
-            "State": "SUCCESS",
-        },
-        "Finding": {"Id": "test-id"},
-    }
-
-    finding_data = {
-        "AwsAccountId": "123456789012",
-        "ProductFields": {},  # Empty ProductFields
-        "Compliance": {},  # Empty Compliance
-    }
-
-    _add_optional_finding_fields(transformed_event, finding_data)
-
-    assert transformed_event["AccountId"] == "123456789012"
-    assert "SecurityStandard" not in transformed_event
-    assert "ControlId" not in transformed_event
-
-
-def test_transform_stepfunctions_failure_event_complete():
-    from send_notifications import _transform_stepfunctions_failure_event
-
-    raw_event = {
-        "detail": {
-            "executionArn": "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution",
-            "name": "test-execution",
-            "status": "FAILED",
-            "cause": "Lambda function failed",
-            "error": "LambdaError",
-            "input": '{"detail": {"findings": [{"Id": "test-finding-id", "AwsAccountId": "123456789012", "Region": "us-east-1"}], "actionName": "CustomAction"}, "detail-type": "Custom Action"}',
-        }
-    }
-
-    result = _transform_stepfunctions_failure_event(raw_event)
-
-    assert result["Notification"]["State"] == "FAILED"
-    assert "test-execution" in result["Notification"]["Message"]
-    assert "LambdaError" in result["Notification"]["Details"]
-    assert "Lambda function failed" in result["Notification"]["Details"]
-    assert (
-        result["Notification"]["StepFunctionsExecutionId"]
-        == "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution"
-    )
-    assert result["Finding"]["Id"] == "test-finding-id"
-    assert result["AccountId"] == "123456789012"
-    assert result["Region"] == "us-east-1"
-    assert result["CustomActionName"] == "CustomAction"
-    assert result["EventType"] == "Custom Action"
-
-
-def test_transform_stepfunctions_failure_event_minimal():
-    from send_notifications import _transform_stepfunctions_failure_event
-
-    raw_event = {
-        "detail": {
-            "executionArn": "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution",
-            "status": "TIMEOUT",
-        }
-    }
-
-    result = _transform_stepfunctions_failure_event(raw_event)
-
-    assert result["Notification"]["State"] == "TIMEOUT"
-    assert result["Finding"]["Id"] == "unknown"
-    assert result["Finding"]["Title"] == "Step Functions Execution Failure"
-
-
-def test_transform_stepfunctions_failure_event_invalid_json():
-    from send_notifications import _transform_stepfunctions_failure_event
-
-    raw_event = {
-        "detail": {
-            "executionArn": "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution",
-            "status": "FAILED",
-            "input": "invalid json {{",
-        }
-    }
-
-    result = _transform_stepfunctions_failure_event(raw_event)
-
-    assert result["Notification"]["State"] == "FAILED"
-    assert result["Finding"]["Id"] == "unknown"
-
-
-def test_transform_stepfunctions_failure_event_exception(mocker):
-    from send_notifications import _transform_stepfunctions_failure_event
-
-    # Mock logger to avoid exc_info conflict
-    mocker.patch("send_notifications.logger.error")
-
-    # Pass None to trigger exception
-    raw_event = None
-
-    result = _transform_stepfunctions_failure_event(raw_event)  # type: ignore[arg-type]
-
-    assert result["Notification"]["State"] == "FAILED"
-    assert "Failed to transform" in result["Notification"]["Message"]
-    assert result["Finding"]["Id"] == "unknown"
-    assert result["EventType"] == "Error"
 
 
 @mock_aws
@@ -1279,3 +1033,140 @@ def test_lambda_handler_with_stepfunctions_failure_event(mocker):
 
     assert sharr_notification_stub.notify.call_count == 1
     assert sharr_notification_stub.severity == "ERROR"
+
+
+@mock_aws
+def test_lambda_handler_queued_notification_creates_history_without_finding(mocker):
+    setup_ssm_parameters()
+    dynamodb = setup_dynamodb_tables()
+    cloudwatch_client = boto3.client("cloudwatch", region_name="us-east-1")
+
+    os.environ["ENHANCED_METRICS"] = "no"
+
+    sharr_notification_stub = setup(mocker, mock_cloudwatch_metrics=False)
+
+    event = cast(
+        Event,
+        cast(
+            object,
+            {
+                "Notification": {
+                    "State": "QUEUED",
+                    "Message": "Remediation queued",
+                    "StepFunctionsExecutionId": "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id",
+                },
+                "Finding": {
+                    "Id": "arn:aws:securityhub:us-east-1:123456789012:security-control/S3.1/finding/test-finding-id",
+                    "Compliance": {"SecurityControlId": "S3.1"},
+                    "AwsAccountId": "123456789012",
+                    "Region": "us-east-1",
+                    "Severity": {"Label": "HIGH"},
+                    "Resources": [
+                        {"Id": "arn:aws:s3:::test-bucket", "Type": "AwsS3Bucket"}
+                    ],
+                },
+                "SSMExecution": {
+                    "Account": "123456789012",
+                    "Region": "us-east-1",
+                },
+            },
+        ),
+    )
+
+    lambda_handler(event, {})
+
+    history_response = dynamodb.get_item(
+        TableName="test-history-table",
+        Key={
+            "findingType": {"S": "security-control/S3.1"},
+            "findingId#executionId": {
+                "S": "arn:aws:securityhub:us-east-1:123456789012:security-control/S3.1/finding/test-finding-id#arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id"
+            },
+        },
+    )
+
+    assert "Item" in history_response
+    assert history_response["Item"]["remediationStatus"]["S"] == "IN_PROGRESS"
+    assert history_response["Item"]["accountId"]["S"] == "123456789012"
+    assert history_response["Item"]["region"]["S"] == "us-east-1"
+    assert history_response["Item"]["severity"]["S"] == "HIGH"
+    assert history_response["Item"]["resourceId"]["S"] == "arn:aws:s3:::test-bucket"
+
+    assert sharr_notification_stub.notify.call_count == 1
+    assert sharr_notification_stub.message == "Remediation queued"
+    assert sharr_notification_stub.severity == "INFO"
+
+    metrics = cloudwatch_client.list_metrics(Namespace="ASR")
+    assert len(metrics["Metrics"]) == 1
+
+
+@mock_aws
+def test_lambda_handler_queued_notification_updates_existing_history(mocker):
+    setup_ssm_parameters()
+    dynamodb = setup_dynamodb_tables()
+    cloudwatch_client = boto3.client("cloudwatch", region_name="us-east-1")
+
+    os.environ["ENHANCED_METRICS"] = "no"
+
+    dynamodb.put_item(
+        TableName="test-history-table",
+        Item={
+            "findingType": {"S": "security-control/S3.1"},
+            "findingId#executionId": {
+                "S": "arn:aws:securityhub:us-east-1:123456789012:security-control/S3.1/finding/test-finding-id#arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id"
+            },
+            "remediationStatus": {"S": "QUEUED"},
+        },
+    )
+
+    sharr_notification_stub = setup(mocker, mock_cloudwatch_metrics=False)
+
+    event = cast(
+        Event,
+        cast(
+            object,
+            {
+                "Notification": {
+                    "State": "QUEUED",
+                    "Message": "Remediation status updated",
+                    "StepFunctionsExecutionId": "arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id",
+                },
+                "Finding": {
+                    "Id": "arn:aws:securityhub:us-east-1:123456789012:security-control/S3.1/finding/test-finding-id",
+                    "Compliance": {"SecurityControlId": "S3.1"},
+                    "AwsAccountId": "123456789012",
+                    "Region": "us-east-1",
+                    "Severity": {"Label": "HIGH"},
+                    "Resources": [
+                        {"Id": "arn:aws:s3:::test-bucket", "Type": "AwsS3Bucket"}
+                    ],
+                },
+                "SSMExecution": {
+                    "Account": "123456789012",
+                    "Region": "us-east-1",
+                },
+            },
+        ),
+    )
+
+    lambda_handler(event, {})
+
+    history_response = dynamodb.get_item(
+        TableName="test-history-table",
+        Key={
+            "findingType": {"S": "security-control/S3.1"},
+            "findingId#executionId": {
+                "S": "arn:aws:securityhub:us-east-1:123456789012:security-control/S3.1/finding/test-finding-id#arn:aws:states:us-east-1:123456789012:execution:TestStateMachine:test-execution-id"
+            },
+        },
+    )
+
+    assert "Item" in history_response
+    assert history_response["Item"]["remediationStatus"]["S"] == "IN_PROGRESS"
+
+    assert sharr_notification_stub.notify.call_count == 1
+    assert sharr_notification_stub.message == "Remediation status updated"
+    assert sharr_notification_stub.severity == "INFO"
+
+    metrics = cloudwatch_client.list_metrics(Namespace="ASR")
+    assert len(metrics["Metrics"]) == 1

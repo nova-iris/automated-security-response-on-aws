@@ -214,3 +214,63 @@ def test_revoke_unauthorized_inbound_rules_from_all(mocker):
 
     ec2_stubber.assert_no_pending_responses()
     ec2_stubber.deactivate()
+
+
+@mock_aws
+def test_revoke_only_unrestricted_all_traffic_rule():
+    # ARRANGE
+    ec2 = connect_to_ec2()
+    sg = ec2.create_security_group(
+        GroupName="test_group", Description="Test security group"
+    )
+    sg_id = sg["GroupId"]
+
+    # Add restricted All Traffic rule (specific source range)
+    ec2.authorize_security_group_ingress(
+        GroupId=sg_id,
+        IpPermissions=[
+            {
+                "FromPort": -1,
+                "IpProtocol": "-1",
+                "IpRanges": [{"CidrIp": "10.0.0.0/8"}],
+                "ToPort": -1,
+            }
+        ],
+    )
+
+    # Add unrestricted All Traffic rule (open to world)
+    ec2.authorize_security_group_ingress(
+        GroupId=sg_id,
+        IpPermissions=[
+            {
+                "FromPort": -1,
+                "IpProtocol": "-1",
+                "IpRanges": [{"CidrIp": OPENIPV4}],
+                "ToPort": -1,
+            }
+        ],
+    )
+
+    # ACT
+    event = {
+        "SecurityGroupId": sg_id,
+        "AuthorizedTcpPorts": [],
+        "AuthorizedUdpPorts": [],
+    }
+    remediation(event, {})
+
+    # ASSERT
+    security_group_rules = ec2.describe_security_group_rules(
+        Filters=[{"Name": "group-id", "Values": [sg_id]}]
+    )
+
+    ingress_rules = [
+        rule
+        for rule in security_group_rules["SecurityGroupRules"]
+        if not rule["IsEgress"] and rule["IpProtocol"] == "-1"
+    ]
+
+    assert len(ingress_rules) == 1
+    assert ingress_rules[0]["CidrIpv4"] == "10.0.0.0/8"
+    assert ingress_rules[0]["FromPort"] == -1
+    assert ingress_rules[0]["ToPort"] == -1

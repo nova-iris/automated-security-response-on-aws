@@ -132,6 +132,7 @@ exports[`ServiceNowBlueprintStack Matches snapshot 1`] = `
             "POWERTOOLS_SERVICE_NAME": "servicenow_ticket_generator",
             "POWERTOOLS_TRACER_CAPTURE_ERROR": "true",
             "POWERTOOLS_TRACER_CAPTURE_RESPONSE": "true",
+            "SECRETS_CACHE_TTL_SECONDS": "300",
             "SECRET_ARN": {
               "Ref": "SecretArn",
             },

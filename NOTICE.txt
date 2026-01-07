@@ -1377,6 +1377,25 @@ mkdirp under the MIT license.
 jsbn under the MIT license.
 read-package-json-fast under the ISC license.
 generator-function under the MIT license.
+aws-sam-translator under the Apache-2.0 license.
+cfn-lint under the MIT license.
+graphql-core under the MIT license.
+joserfc under the BSD-3-Clause license.
+jsonpatch under the BSD-3-Clause license.
+jsonpointer under the BSD-3-Clause license.
+mpmath under the BSD-3-Clause license.
+networkx under the BSD-3-Clause license.
+pyparsing under the MIT license.
+regex under the Apache-2.0 license.
+sympy under the BSD-3-Clause license.
+@inquirer/ansi under the MIT license.
+@rollup/rollup-openharmony-arm64 under the MIT license.
+@material/material-color-utilities under the Apache-2.0 license.
+@rollup/rollup-linux-loong64-musl under the MIT license.
+@rollup/rollup-openbsd-x64 under the MIT license.
+@rollup/rollup-win32-x64-gnu under the MIT license.
+@rollup/rollup-linux-ppc64-musl under the MIT license.
+@rollup/rollup-linux-loong64-gnu under the MIT license.
 
 ********************
 OPEN SOURCE LICENSES

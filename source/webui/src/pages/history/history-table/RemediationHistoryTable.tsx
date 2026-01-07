@@ -7,15 +7,15 @@ import CollectionPreferences, {
 } from '@cloudscape-design/components/collection-preferences';
 import Header from '@cloudscape-design/components/header';
 import PropertyFilter, { PropertyFilterProps } from '@cloudscape-design/components/property-filter';
-import Table from '@cloudscape-design/components/table';
+import Table, { TableProps } from '@cloudscape-design/components/table';
 
 import Alert from '@cloudscape-design/components/alert';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Spinner from '@cloudscape-design/components/spinner';
-import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { historyTablePreferences } from '../../../utils/tablePreferences.ts';
 import { EmptyTableState } from '../../../components/EmptyTableState.tsx';
 import { RemediationHistoryApiResponse } from '@data-models';
 import { useExportRemediationsMutation, useLazySearchRemediationsQuery } from '../../../store/remediationsSlice.ts';
@@ -28,7 +28,7 @@ const getFilterCounterText = (count = 0) => `${count} ${count === 1 ? 'match' : 
 export default function RemediationHistoryTable() {
   const navigate = useNavigate();
   const location = useLocation();
-  useDispatch();
+  const persistedPreferences = historyTablePreferences.load();
 
   // State management
   const [preferences, setPreferences] = useState<CollectionPreferencesProps['preferences']>({
@@ -36,13 +36,16 @@ export default function RemediationHistoryTable() {
     stripedRows: false,
     contentDensity: 'comfortable',
   });
-  const [sortingColumn, setSortingColumn] = useState(() => {
+  const [sortingColumn, setSortingColumn] = useState<TableProps.SortingColumn<RemediationHistoryApiResponse>>(() => {
     const columns = createHistoryColumnDefinitions(navigate);
-    return columns.find(col => col.sortingField === 'lastUpdatedTime')!;
+    return (
+      columns.find((col) => col.sortingField === persistedPreferences.sortingField) ??
+      columns.find((col) => col.sortingField === 'lastUpdatedTime') ??
+      columns[0] // Fallback to first column (columns array is never empty)
+    );
   });
-  const [sortingDescending, setSortingDescending] = useState(true);
-  const [filterTokens, setFilterTokens] = useState<PropertyFilterProps.Token[]>([]);
-  const [filterOperation, setFilterOperation] = useState<'and' | 'or'>('and');
+  const [sortingDescending, setSortingDescending] = useState(persistedPreferences.sortingDescending);
+  const [filterTokens, setFilterTokens] = useState<PropertyFilterProps.Token[]>(persistedPreferences.filterTokens);
 
   const [allHistory, setAllHistory] = useState<RemediationHistoryApiResponse[]>([]);
   const [nextToken, setNextToken] = useState<string | undefined>();
@@ -55,7 +58,8 @@ export default function RemediationHistoryTable() {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
 
-  const [searchRemediations, { data: searchResult, isLoading: isSearchLoading, error: searchError }] = useLazySearchRemediationsQuery();
+  const [searchRemediations, { data: searchResult, isLoading: isSearchLoading, error: searchError }] =
+    useLazySearchRemediationsQuery();
   const [exportRemediations, { isLoading: isExportLoading, error: exportError }] = useExportRemediationsMutation();
 
   // Handle initial filter state from navigation
@@ -66,7 +70,9 @@ export default function RemediationHistoryTable() {
     }
   }, [location.state]);
 
-  const getComparisonOperator = (operator: string): 'EQUALS' | 'NOT_EQUALS' | 'CONTAINS' | 'NOT_CONTAINS' | 'GREATER_THAN_OR_EQUAL' | 'LESS_THAN_OR_EQUAL' => {
+  const getComparisonOperator = (
+    operator: string,
+  ): 'EQUALS' | 'NOT_EQUALS' | 'CONTAINS' | 'NOT_CONTAINS' | 'GREATER_THAN_OR_EQUAL' | 'LESS_THAN_OR_EQUAL' => {
     switch (operator) {
       case '=':
         return 'EQUALS';
@@ -88,12 +94,12 @@ export default function RemediationHistoryTable() {
   const unformatStatus = (formattedStatus: string) => {
     // Convert formatted status back to uppercase with underscores for API
     const statusMap: { [key: string]: string } = {
-      'Success': 'SUCCESS',
-      'Failed': 'FAILED',
+      Success: 'SUCCESS',
+      Failed: 'FAILED',
       'Not Started': 'NOT_STARTED',
-      'In Progress': 'IN_PROGRESS'
+      'In Progress': 'IN_PROGRESS',
     };
-    
+
     return statusMap[formattedStatus] || formattedStatus.toUpperCase().replace(/\s+/g, '_');
   };
 
@@ -102,9 +108,9 @@ export default function RemediationHistoryTable() {
 
     const fieldGroups: { [fieldName: string]: StringFilter[] } = {};
 
-    tokens.forEach(token => {
+    tokens.forEach((token) => {
       const comparison = getComparisonOperator(token.operator || '=');
-      
+
       // Convert formatted remediation status values back to raw values for API
       let filterValue = token.value || '';
       if (token.propertyKey === 'remediationStatus') {
@@ -142,10 +148,12 @@ export default function RemediationHistoryTable() {
 
     const request: SearchRequest = {
       Filters: filters,
-      SortCriteria: [{
-        Field: sortingColumn.sortingField || 'lastUpdatedTime',
-        SortOrder: sortingDescending ? 'desc' : 'asc',
-      }],
+      SortCriteria: [
+        {
+          Field: sortingColumn?.sortingField || 'lastUpdatedTime',
+          SortOrder: sortingDescending ? 'desc' : 'asc',
+        },
+      ],
     };
 
     if (useNextToken && nextToken) {
@@ -168,18 +176,18 @@ export default function RemediationHistoryTable() {
     setAllHistory([]);
     setNextToken(undefined);
     setHasMoreData(false);
-    
+
     const searchRequest = buildSearchRequest(false);
     searchRemediations(searchRequest);
-  }, [filterTokens, filterOperation, sortingColumn, sortingDescending]);
+  }, [filterTokens, sortingColumn, sortingDescending]);
 
   // Update state when search results change
   useEffect(() => {
     if (searchResult) {
       if (operationType === 'loadMore') {
-        setAllHistory(prev => {
-          const existingIds = new Set(prev.map(f => f.executionId));
-          const newRemediations = searchResult.Remediations.filter(f => !existingIds.has(f.executionId));
+        setAllHistory((prev) => {
+          const existingIds = new Set(prev.map((f) => f.executionId));
+          const newRemediations = searchResult.Remediations.filter((f) => !existingIds.has(f.executionId));
           return [...prev, ...newRemediations];
         });
         setIsLoadingMore(false);
@@ -246,38 +254,38 @@ export default function RemediationHistoryTable() {
       key: 'findingId',
       operators: ['='],
       propertyLabel: 'Finding ID',
-      groupValuesLabel: 'Finding ID values'
+      groupValuesLabel: 'Finding ID values',
     },
     {
       key: 'remediationStatus',
       operators: ['=', '!='],
       propertyLabel: 'Status',
-      groupValuesLabel: 'Status values'
+      groupValuesLabel: 'Status values',
     },
     {
       key: 'accountId',
       operators: ['=', '!=', ':', '!:'],
       propertyLabel: 'Account',
-      groupValuesLabel: 'Account values'
+      groupValuesLabel: 'Account values',
     },
     {
       key: 'resourceId',
       operators: ['=', '!=', ':', '!:'],
       propertyLabel: 'Resource ID',
-      groupValuesLabel: 'Resource ID values'
+      groupValuesLabel: 'Resource ID values',
     },
     {
       key: 'lastUpdatedBy',
       operators: ['=', '!=', ':', '!:'],
       propertyLabel: 'Executed By',
-      groupValuesLabel: 'Executed By values'
+      groupValuesLabel: 'Executed By values',
     },
     {
       key: 'lastUpdatedTime',
       operators: ['>=', '<='],
       propertyLabel: 'Execution Timestamp',
-      groupValuesLabel: 'DateTime values (e.g., 2024-01-15T14:30)'
-    }
+      groupValuesLabel: 'DateTime values (e.g., 2024-01-15T14:30)',
+    },
   ];
 
   const filteringOptions = useMemo(() => {
@@ -285,14 +293,9 @@ export default function RemediationHistoryTable() {
     const uniqueValues = new Set<string>();
 
     // Add fixed formatted status values
-    const statusOptions = [
-      'Success',
-      'Failed', 
-      'Not Started',
-      'In Progress'
-    ];
-    
-    statusOptions.forEach(status => {
+    const statusOptions = ['Success', 'Failed', 'Not Started', 'In Progress'];
+
+    statusOptions.forEach((status) => {
       options.push({ propertyKey: 'remediationStatus', value: status });
       uniqueValues.add(`remediationStatus:${status}`);
     });
@@ -313,7 +316,7 @@ export default function RemediationHistoryTable() {
       yesterday.toISOString().split('T')[0],
     ];
 
-    timestampExamples.forEach(value => {
+    timestampExamples.forEach((value) => {
       if (!uniqueValues.has(`lastUpdatedTime:${value}`)) {
         options.push({ propertyKey: 'lastUpdatedTime', value });
         uniqueValues.add(`lastUpdatedTime:${value}`);
@@ -322,8 +325,8 @@ export default function RemediationHistoryTable() {
 
     // Add dynamic values for other fields (excluding remediationStatus and lastUpdatedTime)
     if (Array.isArray(allHistory)) {
-      allHistory.forEach(item => {
-        filteringProperties.forEach(prop => {
+      allHistory.forEach((item) => {
+        filteringProperties.forEach((prop) => {
           if (prop.key === 'remediationStatus' || prop.key === 'lastUpdatedTime') return; // Skip these
 
           const value = item[prop.key as keyof RemediationHistoryApiResponse];
@@ -348,16 +351,30 @@ export default function RemediationHistoryTable() {
         { id: 'findingId', label: 'Finding ID', visible: preferences?.visibleContent?.includes('findingId') ?? true },
         { id: 'status', label: 'Status', visible: preferences?.visibleContent?.includes('status') ?? true },
         { id: 'accountId', label: 'Account', visible: preferences?.visibleContent?.includes('accountId') ?? true },
-        { id: 'resourceId', label: 'Resource ID', visible: preferences?.visibleContent?.includes('resourceId') ?? true },
-        { id: 'executionTimestamp', label: 'Execution Timestamp', visible: preferences?.visibleContent?.includes('executionTimestamp') ?? true },
-        { id: 'executedBy', label: 'Executed By', visible: preferences?.visibleContent?.includes('executedBy') ?? true },
-        { id: 'viewExecution', label: 'View Execution', visible: preferences?.visibleContent?.includes('viewExecution') ?? true },
+        {
+          id: 'resourceId',
+          label: 'Resource ID',
+          visible: preferences?.visibleContent?.includes('resourceId') ?? true,
+        },
+        {
+          id: 'executionTimestamp',
+          label: 'Execution Timestamp',
+          visible: preferences?.visibleContent?.includes('executionTimestamp') ?? true,
+        },
+        {
+          id: 'executedBy',
+          label: 'Executed By',
+          visible: preferences?.visibleContent?.includes('executedBy') ?? true,
+        },
+        {
+          id: 'viewExecution',
+          label: 'View Execution',
+          visible: preferences?.visibleContent?.includes('viewExecution') ?? true,
+        },
       ],
     },
-    onConfirm: ({ detail }: any) => {
-      const visibleContent = detail.contentDisplay
-        .filter((item: any) => item.visible)
-        .map((item: any) => item.id);
+    onConfirm: ({ detail }: { detail: CollectionPreferencesProps.Preferences }) => {
+      const visibleContent = detail.contentDisplay?.filter((item) => item.visible).map((item) => item.id);
 
       setPreferences({
         ...preferences,
@@ -379,22 +396,7 @@ export default function RemediationHistoryTable() {
     },
   };
 
-  const allColumnDefinitions = useMemo(() => {
-    const columns = createHistoryColumnDefinitions(navigate);
-    // Add IDs to columns for preferences
-    return columns.map((col, index) => ({
-      ...col,
-      id: [
-        'findingId',
-        'status',
-        'accountId',
-        'resourceId',
-        'executionTimestamp',
-        'executedBy',
-        'viewExecution'
-      ][index]
-    }));
-  }, [navigate]);
+  const allColumnDefinitions = useMemo(() => createHistoryColumnDefinitions(navigate), [navigate]);
 
   const columnDefinitions = useMemo(() => {
     if (!preferences?.visibleContent) {
@@ -402,17 +404,24 @@ export default function RemediationHistoryTable() {
       return allColumnDefinitions;
     }
 
-    return allColumnDefinitions.filter(col => preferences.visibleContent!.includes(col.id));
+    return allColumnDefinitions.filter((col) => col.id && preferences.visibleContent?.includes(col.id));
   }, [allColumnDefinitions, preferences?.visibleContent]);
 
-  const handleFilterChange = ({ detail }: any) => {
-    setFilterTokens(detail.tokens || []);
-    setFilterOperation(detail.operation || 'and');
+  const handleFilterChange = ({ detail }: { detail: PropertyFilterProps.Query }) => {
+    const tokens = [...(detail.tokens || [])];
+    setFilterTokens(tokens);
+    historyTablePreferences.save({ filterTokens: tokens });
   };
 
-  const handleSortingChange = (detail: any) => {
-    setSortingColumn(detail.sortingColumn);
-    setSortingDescending(detail.isDescending);
+  const handleSortingChange = ({ detail }: { detail: TableProps.SortingState<RemediationHistoryApiResponse> }) => {
+    if (detail.sortingColumn) {
+      setSortingColumn(detail.sortingColumn);
+    }
+    setSortingDescending(detail.isDescending ?? false);
+    historyTablePreferences.save({
+      sortingField: detail.sortingColumn?.sortingField,
+      sortingDescending: detail.isDescending ?? false,
+    });
   };
 
   const loadMoreRemediations = useCallback(async () => {
@@ -438,7 +447,7 @@ export default function RemediationHistoryTable() {
         root: null,
         rootMargin: '50px', // Trigger 50px before reaching the element
         threshold: 0.1,
-      }
+      },
     );
 
     const currentTrigger = loadMoreTriggerRef.current;
@@ -497,7 +506,7 @@ export default function RemediationHistoryTable() {
 
         if (result.status === 'partial') {
           setErrorMessage(
-            `Partial Export: Exported ${result.totalExported.toLocaleString()} records. ${result.message || ''}`
+            `Partial Export: Exported ${result.totalExported.toLocaleString()} records. ${result.message || ''}`,
           );
         }
       }
@@ -508,22 +517,15 @@ export default function RemediationHistoryTable() {
     }
   };
 
-
   return (
     <div>
-      
       {/* Header Section */}
       <Header
         variant="h1"
         counter={`(${history.length}${hasMoreData ? '+' : ''})`}
         actions={
           <SpaceBetween direction="horizontal" size="xs">
-            <Button
-              iconName="refresh"
-              loading={isSearchLoading}
-              onClick={handleRefresh}
-              ariaLabel="Refresh history"
-            />
+            <Button iconName="refresh" loading={isSearchLoading} onClick={handleRefresh} ariaLabel="Refresh history" />
             <Button
               iconName="download"
               loading={isExportLoading}
@@ -542,12 +544,7 @@ export default function RemediationHistoryTable() {
 
       {errorMessage && (
         <Box margin={{ bottom: 's' }}>
-          <Alert
-            type="error"
-            dismissible
-            onDismiss={() => setErrorMessage(null)}
-            header="Operation Failed"
-          >
+          <Alert type="error" dismissible onDismiss={() => setErrorMessage(null)} header="Operation Failed">
             {errorMessage}
           </Alert>
         </Box>
@@ -590,8 +587,9 @@ export default function RemediationHistoryTable() {
               tokenLimitShowMore: 'Show more',
               tokenLimitShowFewer: 'Show fewer',
               clearFiltersText: 'Clear filters',
-              removeTokenButtonAriaLabel: (token) => `Remove token ${token.propertyKey} ${token.operator} ${token.value}`,
-              enteredTextLabel: (text) => `Use: "${text}"`
+              removeTokenButtonAriaLabel: (token) =>
+                `Remove token ${token.propertyKey} ${token.operator} ${token.value}`,
+              enteredTextLabel: (text) => `Use: "${text}"`,
             }}
             expandToViewport
           />
@@ -608,14 +606,14 @@ export default function RemediationHistoryTable() {
           columnDefinitions={columnDefinitions}
           sortingColumn={sortingColumn}
           sortingDescending={sortingDescending}
-          onSortingChange={({ detail }) => handleSortingChange(detail)}
+          onSortingChange={handleSortingChange}
           stickyHeader
           stripedRows={preferences?.stripedRows ?? false}
           contentDensity={preferences?.contentDensity ?? 'comfortable'}
           wrapLines={preferences?.wrapLines ?? true}
           variant="full-page"
           ariaLabels={{
-            tableLabel: 'Remediation history table'
+            tableLabel: 'Remediation history table',
           }}
           empty={<EmptyTableState title="No history to display" subtitle="" />}
         />
@@ -639,9 +637,7 @@ export default function RemediationHistoryTable() {
           <Box textAlign="center" padding="l" fontWeight="bold">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <Spinner size="normal" />
-              <span>
-                Loading more remediations...
-              </span>
+              <span>Loading more remediations...</span>
             </div>
           </Box>
         )}

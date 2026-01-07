@@ -3,7 +3,7 @@
 
 import json
 
-from send_notifications import _transform_stepfunctions_failure_event
+from layer.event_transformers import transform_stepfunctions_failure_event
 
 
 def test_transform_stepfunctions_failure_event():
@@ -53,7 +53,7 @@ def test_transform_stepfunctions_failure_event():
         },
     }
 
-    result = _transform_stepfunctions_failure_event(stepfunctions_event)
+    result = transform_stepfunctions_failure_event(stepfunctions_event)
 
     assert (
         result["Notification"]["Message"]
@@ -107,7 +107,7 @@ def test_transform_stepfunctions_timeout_event():
         },
     }
 
-    result = _transform_stepfunctions_failure_event(stepfunctions_event)
+    result = transform_stepfunctions_failure_event(stepfunctions_event)
 
     assert result["Notification"]["State"] == "TIMED_OUT"
     assert "Cause: Execution timed out" in result["Notification"]["Details"]
@@ -127,7 +127,7 @@ def test_transform_with_invalid_input():
         },
     }
 
-    result = _transform_stepfunctions_failure_event(stepfunctions_event)
+    result = transform_stepfunctions_failure_event(stepfunctions_event)
 
     # With invalid input, we now return a minimal valid finding instead of empty dict
     assert result["Finding"]["Id"] == "unknown"

@@ -6,10 +6,12 @@ import { PlaybookProps } from '../lib/control_runbooks-construct';
 import { HardCodedBoolean, HardCodedString, StringVariable } from '@cdklabs/cdk-ssm-documents';
 
 export function createControlRunbook(scope: Construct, id: string, props: PlaybookProps): ControlRunbookDocument {
+  const cis300ControlId = '2.1.4.2'; // NOSONAR This is not an IP Address.
+
   return new ConfigureS3BucketPublicAccessBlockDocument(scope, id, {
     ...props,
     controlId: 'S3.2',
-    otherControlIds: ['S3.3', 'S3.8'],
+    otherControlIds: ['S3.3', 'S3.8', cis300ControlId],
   });
 }
 

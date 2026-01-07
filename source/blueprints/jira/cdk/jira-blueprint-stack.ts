@@ -62,6 +62,7 @@ export class JiraBlueprintStack extends BlueprintStack {
         AWS_ACCOUNT_ID: stack.account,
         STACK_ID: stack.stackId,
         DISABLE_ACCOUNT_ALIAS_LOOKUP: 'false',
+        SECRETS_CACHE_TTL_SECONDS: '300',
       },
       memorySize: 256,
       timeout: cdk.Duration.seconds(15),

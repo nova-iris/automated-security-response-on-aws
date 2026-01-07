@@ -134,6 +134,7 @@ exports[`JiraBlueprintStack Matches snapshot 1`] = `
             "PROJECT_NAME": {
               "Ref": "JiraProjectKey",
             },
+            "SECRETS_CACHE_TTL_SECONDS": "300",
             "SECRET_ARN": {
               "Ref": "SecretArn",
             },

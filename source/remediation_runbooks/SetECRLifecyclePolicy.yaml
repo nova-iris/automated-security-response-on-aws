@@ -1,0 +1,47 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-SetECRLifecyclePolicy
+
+  ## What does this document do?
+    This document configures a lifecycle policy on an Amazon ECR repository
+    to manage image retention and cleanup of old or untagged images.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * RepositoryName: (Required) The name of the ECR repository.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: EC2.55
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  RepositoryName:
+    type: String
+    description: (Required) The name of the ECR repository.
+    allowedPattern: '([a-z0-9._\/\-]+)$'
+
+outputs:
+  - SetECRLifecyclePolicy.Output
+mainSteps:
+- name: 'SetECRLifecyclePolicy'
+  action: 'aws:executeScript'
+  maxAttempts: 3
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      RepositoryName: '{{ RepositoryName }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=SetECRLifecyclePolicy.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

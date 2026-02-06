@@ -5000,5 +5000,336 @@ export class RemediationRunbookStack extends cdk.Stack {
         namespace: namespace,
       });
     }
+
+    //-----------------------
+    // SetS3VersionedLifecyclePolicy (Custom - S3.10)
+    //
+    {
+      const remediationName = 'SetS3VersionedLifecyclePolicy';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const s3Permissions = new PolicyStatement();
+      s3Permissions.addActions(
+        's3:PutLifecycleConfiguration',
+        's3:GetLifecycleConfiguration',
+        's3:GetBucketVersioning',
+      );
+      s3Permissions.effect = Effect.ALLOW;
+      s3Permissions.addResources(`arn:${this.partition}:s3:::*`);
+      inlinePolicy.addStatements(s3Permissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
+
+    //-----------------------
+    // EnableS3BucketVersioning (Custom - S3.14)
+    //
+    {
+      const remediationName = 'EnableS3BucketVersioning';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const s3Permissions = new PolicyStatement();
+      s3Permissions.addActions(
+        's3:PutBucketVersioning',
+        's3:GetBucketVersioning',
+      );
+      s3Permissions.effect = Effect.ALLOW;
+      s3Permissions.addResources(`arn:${this.partition}:s3:::*`);
+      inlinePolicy.addStatements(s3Permissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
+
+    //-----------------------
+    // EnableS3KMSEncryption (Custom - S3.17)
+    //
+    {
+      const remediationName = 'EnableS3KMSEncryption';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const s3Permissions = new PolicyStatement();
+      s3Permissions.addActions(
+        's3:PutEncryptionConfiguration',
+        's3:GetEncryptionConfiguration',
+      );
+      s3Permissions.effect = Effect.ALLOW;
+      s3Permissions.addResources(`arn:${this.partition}:s3:::*`);
+      inlinePolicy.addStatements(s3Permissions);
+
+      const kmsPermissions = new PolicyStatement();
+      kmsPermissions.addActions(
+        'kms:ListAliases',
+        'kms:DescribeKey',
+      );
+      kmsPermissions.effect = Effect.ALLOW;
+      kmsPermissions.addResources('*');
+      inlinePolicy.addStatements(kmsPermissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
+
+    //-----------------------
+    // EnableRDSCloudWatchLogs (Custom - RDS.9)
+    //
+    {
+      const remediationName = 'EnableRDSCloudWatchLogs';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const rdsPermissions = new PolicyStatement();
+      rdsPermissions.addActions(
+        'rds:ModifyDBInstance',
+        'rds:DescribeDBInstances',
+      );
+      rdsPermissions.effect = Effect.ALLOW;
+      rdsPermissions.addResources(`arn:${this.partition}:rds:*:${this.account}:db:*`);
+      inlinePolicy.addStatements(rdsPermissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
+
+    //-----------------------
+    // EnableRDSInstanceIAMAuthentication (Custom - RDS.10)
+    //
+    {
+      const remediationName = 'EnableRDSInstanceIAMAuthentication';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const rdsPermissions = new PolicyStatement();
+      rdsPermissions.addActions(
+        'rds:ModifyDBInstance',
+        'rds:DescribeDBInstances',
+      );
+      rdsPermissions.effect = Effect.ALLOW;
+      rdsPermissions.addResources(`arn:${this.partition}:rds:*:${this.account}:db:*`);
+      inlinePolicy.addStatements(rdsPermissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
+
+    //-----------------------
+    // EnableEbsEncryptionByDefaultCustom (Custom - EC2.28)
+    //
+    {
+      const remediationName = 'EnableEbsEncryptionByDefaultCustom';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const ec2Permissions = new PolicyStatement();
+      ec2Permissions.addActions(
+        'ec2:EnableEbsEncryptionByDefault',
+        'ec2:GetEbsEncryptionByDefault',
+      );
+      ec2Permissions.effect = Effect.ALLOW;
+      ec2Permissions.addResources('*');
+      inlinePolicy.addStatements(ec2Permissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
+
+    //-----------------------
+    // SetECRLifecyclePolicy (Custom - EC2.55)
+    //
+    {
+      const remediationName = 'SetECRLifecyclePolicy';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const ecrPermissions = new PolicyStatement();
+      ecrPermissions.addActions(
+        'ecr:PutLifecyclePolicy',
+        'ecr:GetLifecyclePolicy',
+        'ecr:DescribeRepositories',
+      );
+      ecrPermissions.effect = Effect.ALLOW;
+      ecrPermissions.addResources(`arn:${this.partition}:ecr:*:${this.account}:repository/*`);
+      inlinePolicy.addStatements(ecrPermissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
+
+    //-----------------------
+    // EnableECRImageScanning (Custom - EC2.56)
+    //
+    {
+      const remediationName = 'EnableECRImageScanning';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const ecrPermissions = new PolicyStatement();
+      ecrPermissions.addActions(
+        'ecr:PutImageScanningConfiguration',
+        'ecr:DescribeRepositories',
+      );
+      ecrPermissions.effect = Effect.ALLOW;
+      ecrPermissions.addResources(`arn:${this.partition}:ecr:*:${this.account}:repository/*`);
+      inlinePolicy.addStatements(ecrPermissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
+
+    //-----------------------
+    // AttachSSMVPCEndpoints (Custom - EC2.57)
+    //
+    {
+      const remediationName = 'AttachSSMVPCEndpoints';
+      const inlinePolicy = new Policy(props.roleStack, `ASR-Remediation-Policy-${remediationName}`);
+
+      const ec2Permissions = new PolicyStatement();
+      ec2Permissions.addActions(
+        'ec2:CreateVpcEndpoint',
+        'ec2:DescribeVpcEndpoints',
+        'ec2:DescribeSubnets',
+        'ec2:DescribeVpcs',
+        'ec2:DescribeSecurityGroups',
+        'ec2:CreateSecurityGroup',
+        'ec2:AuthorizeSecurityGroupIngress',
+      );
+      ec2Permissions.effect = Effect.ALLOW;
+      ec2Permissions.addResources('*');
+      inlinePolicy.addStatements(ec2Permissions);
+
+      new SsmRole(props.roleStack, 'RemediationRole ' + remediationName, {
+        solutionId: props.solutionId,
+        ssmDocName: remediationName,
+        remediationPolicy: inlinePolicy,
+        remediationRoleName: `${remediationRoleNameBase}${remediationName}`,
+      });
+
+      RunbookFactory.createRemediationRunbook(this, 'ASR ' + remediationName, {
+        ssmDocName: remediationName,
+        ssmDocPath: ssmdocs,
+        ssmDocFileName: `${remediationName}.yaml`,
+        scriptPath: `${ssmdocs}/scripts`,
+        solutionVersion: props.solutionVersion,
+        solutionDistBucket: props.solutionDistBucket,
+        solutionId: props.solutionId,
+        namespace: namespace,
+      });
+    }
   }
 }

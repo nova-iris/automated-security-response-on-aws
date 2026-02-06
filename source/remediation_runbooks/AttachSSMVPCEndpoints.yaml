@@ -1,0 +1,46 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-AttachSSMVPCEndpoints
+
+  ## What does this document do?
+    This document creates VPC interface endpoints for AWS Systems Manager services
+    (ssm, ssmmessages, ec2messages) to enable private connectivity for managed instances.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * VPCId: (Required) The ID of the VPC.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: EC2.57
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  VPCId:
+    type: String
+    description: (Required) The VPC ID.
+    allowedPattern: '^vpc-[0-9a-f]{8,17}$'
+
+outputs:
+  - AttachSSMVPCEndpoints.Output
+mainSteps:
+- name: 'AttachSSMVPCEndpoints'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      VPCId: '{{ VPCId }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=AttachSSMVPCEndpoints.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

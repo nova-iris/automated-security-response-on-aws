@@ -1,0 +1,47 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-EnableRDSCloudWatchLogs
+
+  ## What does this document do?
+    This document enables publishing of RDS database logs to Amazon CloudWatch Logs.
+    It determines the appropriate log types based on the database engine
+    (MySQL, PostgreSQL, Oracle, SQL Server, MariaDB).
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * DBInstanceIdentifier: (Required) The identifier of the RDS DB instance.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: RDS.9
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  DBInstanceIdentifier:
+    type: String
+    description: (Required) The identifier of the RDS DB instance.
+    allowedPattern: '^[a-zA-Z][a-zA-Z0-9-]{0,62}$'
+
+outputs:
+  - EnableRDSCloudWatchLogs.Output
+mainSteps:
+- name: 'EnableRDSCloudWatchLogs'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      DBInstanceIdentifier: '{{ DBInstanceIdentifier }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=EnableRDSCloudWatchLogs.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

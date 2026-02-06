@@ -131,6 +131,16 @@ const remediations: IControl[] = [
   { control: 'DataFirehose.1', versionAdded: '2.3.0' },
   { control: 'WAF.11', versionAdded: '2.3.0' },
   { control: 'KMS.2', versionAdded: '2.3.0' },
+  // Phase 2 custom runbooks - 9 missing controls
+  { control: 'S3.10', versionAdded: '2.3.0' },
+  { control: 'S3.14', versionAdded: '2.3.0' },
+  { control: 'S3.17', versionAdded: '2.3.0' },
+  { control: 'RDS.9', versionAdded: '2.3.0' },
+  { control: 'RDS.10', versionAdded: '2.3.0' },
+  { control: 'EC2.28', versionAdded: '2.3.0' },
+  { control: 'EC2.55', versionAdded: '2.3.0' },
+  { control: 'EC2.56', versionAdded: '2.3.0' },
+  { control: 'EC2.57', versionAdded: '2.3.0' },
 ];
 export const SC_REMEDIATIONS: IControl[] = [...remediations].sort((controlA, controlB) =>
   compareVersions(controlA.versionAdded, controlB.versionAdded),

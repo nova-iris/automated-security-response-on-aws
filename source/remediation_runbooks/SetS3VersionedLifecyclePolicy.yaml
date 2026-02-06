@@ -1,0 +1,50 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-SetS3VersionedLifecyclePolicy
+
+  ## What does this document do?
+    This document configures lifecycle policies on S3 buckets with versioning enabled
+    to manage noncurrent object versions, transitioning them to cheaper storage classes
+    and expiring them after a retention period.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * BucketName: (Required) The name of the S3 bucket.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: S3.10
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  BucketName:
+    type: String
+    description: (Required) The name of the S3 bucket.
+    allowedPattern: '(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)'
+
+outputs:
+  - SetS3VersionedLifecyclePolicy.Output
+mainSteps:
+- name: 'SetS3VersionedLifecyclePolicy'
+  action: 'aws:executeScript'
+  maxAttempts: 3
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      BucketName: '{{ BucketName }}'
+      NoncurrentDays: 90
+      NoncurrentTransitionDays: 30
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=SetS3VersionedLifecyclePolicy.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

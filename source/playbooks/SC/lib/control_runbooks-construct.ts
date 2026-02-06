@@ -103,6 +103,16 @@ import * as apigateway_9 from '../ssmdocs/SC_APIGateway.9';
 import * as datafirehose_1 from '../ssmdocs/SC_DataFirehose.1';
 import * as waf_11 from '../ssmdocs/SC_WAF.11';
 import * as kms_2 from '../ssmdocs/SC_KMS.2';
+// Phase 2 custom runbooks - 9 missing controls
+import * as s3_10 from '../ssmdocs/SC_S3.10';
+import * as s3_14 from '../ssmdocs/SC_S3.14';
+import * as s3_17 from '../ssmdocs/SC_S3.17';
+import * as rds_9 from '../ssmdocs/SC_RDS.9';
+import * as rds_10 from '../ssmdocs/SC_RDS.10';
+import * as ec2_28 from '../ssmdocs/SC_EC2.28';
+import * as ec2_55 from '../ssmdocs/SC_EC2.55';
+import * as ec2_56 from '../ssmdocs/SC_EC2.56';
+import * as ec2_57 from '../ssmdocs/SC_EC2.57';
 import { IControl } from '../../../lib/playbook-construct';
 
 export interface PlaybookProps {
@@ -216,6 +226,16 @@ const controlRunbooksRecord: Record<string, any> = {
   'DataFirehose.1': datafirehose_1.createControlRunbook,
   'WAF.11': waf_11.createControlRunbook,
   'KMS.2': kms_2.createControlRunbook,
+  // Phase 2 custom runbooks - 9 missing controls
+  'S3.10': s3_10.createControlRunbook,
+  'S3.14': s3_14.createControlRunbook,
+  'S3.17': s3_17.createControlRunbook,
+  'RDS.9': rds_9.createControlRunbook,
+  'RDS.10': rds_10.createControlRunbook,
+  'EC2.28': ec2_28.createControlRunbook,
+  'EC2.55': ec2_55.createControlRunbook,
+  'EC2.56': ec2_56.createControlRunbook,
+  'EC2.57': ec2_57.createControlRunbook,
 };
 
 export class ControlRunbooks extends Construct {

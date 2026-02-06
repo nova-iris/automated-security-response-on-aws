@@ -1,0 +1,53 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-ConfigureLambdaDLQ
+
+  ## What does this document do?
+    This document configures a dead-letter queue (DLQ) for a Lambda function using
+    [UpdateFunctionConfiguration](https://docs.aws.amazon.com/lambda/latest/dg/API_UpdateFunctionConfiguration.html) API.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * FunctionName: (Required) The name of the Lambda function.
+  * DLQTargetArn: (Optional) The ARN of the SQS queue or SNS topic for DLQ. If not provided, creates a new SQS queue.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: Lambda.2
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  FunctionName:
+    type: String
+    description: (Required) The name of the Lambda function.
+    allowedPattern: '^[a-zA-Z0-9-_]{1,64}$'
+  DLQTargetArn:
+    type: String
+    description: (Optional) The ARN of the SQS queue or SNS topic for DLQ.
+    default: ''
+    allowedPattern: '^$|^arn:(?:aws|aws-us-gov|aws-cn):(sqs|sns):[a-z0-9-]+:\d{12}:[a-zA-Z0-9_-]+$'
+
+outputs:
+  - ConfigureLambdaDLQ.Output
+mainSteps:
+- name: 'ConfigureLambdaDLQ'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      function_name: '{{ FunctionName }}'
+      dlq_target_arn: '{{ DLQTargetArn }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=configure_lambda_dlq.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

@@ -1,0 +1,67 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-UpdateLambdaRuntime
+
+  ## What does this document do?
+    This document provides information about updating a Lambda function runtime.
+    Note: Runtime updates may require code changes and testing.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * FunctionName: (Required) The name of the Lambda function.
+  * NewRuntime: (Required) The new runtime version.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: Lambda.7
+
+  ## Note
+  This control requires code testing before deployment.
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  FunctionName:
+    type: String
+    description: (Required) The name of the Lambda function.
+    allowedPattern: '^[a-zA-Z0-9-_]{1,64}$'
+  NewRuntime:
+    type: String
+    description: (Required) The new runtime version.
+    allowedValues:
+      - 'python3.11'
+      - 'python3.12'
+      - 'python3.13'
+      - 'nodejs18.x'
+      - 'nodejs20.x'
+      - 'nodejs22.x'
+      - 'java17'
+      - 'java21'
+      - 'dotnet6'
+      - 'dotnet8'
+      - 'ruby3.2'
+      - 'ruby3.3'
+
+outputs:
+  - UpdateLambdaRuntime.Output
+mainSteps:
+- name: 'UpdateLambdaRuntime'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      function_name: '{{ FunctionName }}'
+      new_runtime: '{{ NewRuntime }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=update_lambda_runtime.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

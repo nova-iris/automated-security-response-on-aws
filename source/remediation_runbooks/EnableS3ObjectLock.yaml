@@ -1,0 +1,50 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-EnableS3ObjectLock
+
+  ## What does this document do?
+    This document documents the manual steps required to enable S3 Object Lock on a bucket.
+    Object Lock cannot be enabled on existing buckets - the bucket must be recreated.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * BucketName: (Required) The name of the S3 bucket.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: S3.15
+
+  ## Note
+  This control cannot be fully automated. Object Lock must be enabled at bucket creation time.
+  This runbook will verify the current state and provide remediation steps.
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  BucketName:
+    type: String
+    description: (Required) The name of the S3 bucket.
+    allowedPattern: '^[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$'
+
+outputs:
+  - EnableS3ObjectLock.Output
+mainSteps:
+- name: 'EnableS3ObjectLock'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      bucket_name: '{{ BucketName }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=enable_s3_object_lock.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

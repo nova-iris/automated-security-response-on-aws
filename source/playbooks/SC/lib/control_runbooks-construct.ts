@@ -85,6 +85,24 @@ import * as ssm_1 from '../ssmdocs/SC_SSM.1';
 import * as ssm_4 from '../ssmdocs/SC_SSM.4';
 import * as ssm_7 from '../ssmdocs/SC_SSM.7';
 import * as macie_1 from '../ssmdocs/SC_Macie.1';
+// Custom runbooks for unsupported controls
+import * as s3_7 from '../ssmdocs/SC_S3.7';
+import * as s3_15 from '../ssmdocs/SC_S3.15';
+import * as s3_20 from '../ssmdocs/SC_S3.20';
+import * as rds_12 from '../ssmdocs/SC_RDS.12';
+import * as rds_23 from '../ssmdocs/SC_RDS.23';
+import * as ec2_58 from '../ssmdocs/SC_EC2.58';
+import * as ec2_60 from '../ssmdocs/SC_EC2.60';
+import * as iam_2 from '../ssmdocs/SC_IAM.2';
+import * as iam_19 from '../ssmdocs/SC_IAM.19';
+import * as lambda_2 from '../ssmdocs/SC_Lambda.2';
+import * as lambda_3 from '../ssmdocs/SC_Lambda.3';
+import * as lambda_7 from '../ssmdocs/SC_Lambda.7';
+import * as apigateway_8 from '../ssmdocs/SC_APIGateway.8';
+import * as apigateway_9 from '../ssmdocs/SC_APIGateway.9';
+import * as datafirehose_1 from '../ssmdocs/SC_DataFirehose.1';
+import * as waf_11 from '../ssmdocs/SC_WAF.11';
+import * as kms_2 from '../ssmdocs/SC_KMS.2';
 import { IControl } from '../../../lib/playbook-construct';
 
 export interface PlaybookProps {
@@ -180,6 +198,24 @@ const controlRunbooksRecord: Record<string, any> = {
   'SSM.4': ssm_4.createControlRunbook,
   'SSM.7': ssm_7.createControlRunbook,
   'Macie.1': macie_1.createControlRunbook,
+  // Custom runbooks for unsupported controls
+  'S3.7': s3_7.createControlRunbook,
+  'S3.15': s3_15.createControlRunbook,
+  'S3.20': s3_20.createControlRunbook,
+  'RDS.12': rds_12.createControlRunbook,
+  'RDS.23': rds_23.createControlRunbook,
+  'EC2.58': ec2_58.createControlRunbook,
+  'EC2.60': ec2_60.createControlRunbook,
+  'IAM.2': iam_2.createControlRunbook,
+  'IAM.19': iam_19.createControlRunbook,
+  'Lambda.2': lambda_2.createControlRunbook,
+  'Lambda.3': lambda_3.createControlRunbook,
+  'Lambda.7': lambda_7.createControlRunbook,
+  'APIGateway.8': apigateway_8.createControlRunbook,
+  'APIGateway.9': apigateway_9.createControlRunbook,
+  'DataFirehose.1': datafirehose_1.createControlRunbook,
+  'WAF.11': waf_11.createControlRunbook,
+  'KMS.2': kms_2.createControlRunbook,
 };
 
 export class ControlRunbooks extends Construct {

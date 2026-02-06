@@ -1,0 +1,47 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-RemoveIAMUserDirectPolicies
+
+  ## What does this document do?
+    This document removes directly attached IAM policies from an IAM user using
+    [DetachUserPolicy](https://docs.aws.amazon.com/IAM/latest/APIReference/API_DetachUserPolicy.html) and
+    [DeleteUserPolicy](https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeleteUserPolicy.html) APIs.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * IAMUserName: (Required) The name of the IAM user.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: IAM.2
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  IAMUserName:
+    type: String
+    description: (Required) The name of the IAM user.
+    allowedPattern: '^[\w+=,.@-]{1,64}$'
+
+outputs:
+  - RemoveIAMUserDirectPolicies.Output
+mainSteps:
+- name: 'RemoveIAMUserDirectPolicies'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      iam_user_name: '{{ IAMUserName }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=remove_iam_user_direct_policies.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

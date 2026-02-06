@@ -1,0 +1,48 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-RemoveKMSInlinePolicies
+
+  ## What does this document do?
+    This document reviews and removes overly permissive KMS inline policies from IAM principals.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * PrincipalArn: (Required) The ARN of the IAM principal (user, role, or group).
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: KMS.2
+
+  ## Note
+  This control requires careful review to avoid breaking application dependencies.
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  PrincipalArn:
+    type: String
+    description: (Required) The ARN of the IAM principal.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:(user|role|group)/[\w+=,.@/-]+$'
+
+outputs:
+  - RemoveKMSInlinePolicies.Output
+mainSteps:
+- name: 'RemoveKMSInlinePolicies'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      principal_arn: '{{ PrincipalArn }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=remove_kms_inline_policies.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

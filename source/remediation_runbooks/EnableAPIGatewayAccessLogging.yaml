@@ -1,0 +1,59 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-EnableAPIGatewayAccessLogging
+
+  ## What does this document do?
+    This document enables access logging on API Gateway stages using
+    [UpdateStage](https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-stages-stagename.html) API.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * ApiId: (Required) The API identifier.
+  * StageName: (Required) The stage name.
+  * LogGroupArn: (Optional) The ARN of the CloudWatch Logs log group. If not provided, creates a new log group.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: APIGateway.9
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  ApiId:
+    type: String
+    description: (Required) The API identifier.
+    allowedPattern: '^[a-z0-9]{10}$'
+  StageName:
+    type: String
+    description: (Required) The stage name.
+    allowedPattern: '^[a-zA-Z0-9_-]+$'
+  LogGroupArn:
+    type: String
+    description: (Optional) The ARN of the CloudWatch Logs log group.
+    default: ''
+    allowedPattern: '^$|^arn:(?:aws|aws-us-gov|aws-cn):logs:[a-z0-9-]+:\d{12}:log-group:[a-zA-Z0-9/_.-]+$'
+
+outputs:
+  - EnableAPIGatewayAccessLogging.Output
+mainSteps:
+- name: 'EnableAPIGatewayAccessLogging'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      api_id: '{{ ApiId }}'
+      stage_name: '{{ StageName }}'
+      log_group_arn: '{{ LogGroupArn }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=enable_apigateway_access_logging.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

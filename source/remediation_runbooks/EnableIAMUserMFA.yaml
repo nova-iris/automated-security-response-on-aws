@@ -1,0 +1,49 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-EnableIAMUserMFA
+
+  ## What does this document do?
+    This document provides information about enabling MFA for an IAM user.
+    Note: MFA setup requires user interaction and cannot be fully automated.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * IAMUserName: (Required) The name of the IAM user.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: IAM.19
+
+  ## Note
+  This control requires user action to complete MFA setup.
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  IAMUserName:
+    type: String
+    description: (Required) The name of the IAM user.
+    allowedPattern: '^[\w+=,.@-]{1,64}$'
+
+outputs:
+  - EnableIAMUserMFA.Output
+mainSteps:
+- name: 'EnableIAMUserMFA'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      iam_user_name: '{{ IAMUserName }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=enable_iam_user_mfa.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

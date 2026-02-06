@@ -834,6 +834,299 @@ def lambda_handler(event: EventType, _):
       },
       "Type": "AWS::SSM::Document",
     },
+    "ASRChangeRDSInstancePort": {
+      "DependsOn": [
+        "CreateWait16",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-ChangeRDSInstancePort
+
+## What does this document do?
+  This document provides information about changing the RDS database port.
+  Note: Changing the port requires application updates and causes downtime.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* DBInstanceIdentifier: (Required) The identifier of the RDS DB instance.
+* NewPort: (Required) The new port number for the database.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: RDS.23
+
+## Note
+This control requires manual intervention due to application dependencies.
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "db_instance_identifier": "{{ DBInstanceIdentifier }}",
+                  "new_port": "{{ NewPort }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Changes the port of an RDS database instance.
+Note: This operation requires application updates and causes downtime.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_rds():
+    return boto3.client("rds", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Changes the port of an RDS database instance.
+    """
+    db_instance_identifier = event["db_instance_identifier"]
+    new_port = event["new_port"]
+
+    rds_client = connect_to_rds()
+
+    try:
+        # Get current instance info
+        response = rds_client.describe_db_instances(
+            DBInstanceIdentifier=db_instance_identifier
+        )
+        
+        if not response.get("DBInstances"):
+            return {
+                "status": "FAILED",
+                "message": f"RDS instance {db_instance_identifier} not found"
+            }
+
+        instance = response["DBInstances"][0]
+        current_port = instance.get("Endpoint", {}).get("Port")
+        engine = instance.get("Engine")
+
+        # Check if port is already correct
+        if current_port == new_port:
+            return {
+                "status": "SUCCESS",
+                "message": f"RDS instance {db_instance_identifier} is already using port {new_port}"
+            }
+
+        # Modify the instance port
+        rds_client.modify_db_instance(
+            DBInstanceIdentifier=db_instance_identifier,
+            DBPortNumber=new_port,
+            ApplyImmediately=True
+        )
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Port change initiated for RDS instance {db_instance_identifier} from {current_port} to {new_port}. "
+                      "WARNING: This will cause a brief outage. "
+                      "Ensure all applications are updated to use the new port.",
+            "warnings": [
+                "Database will be briefly unavailable during port change",
+                f"Update all applications to connect to port {new_port}",
+                "Update security group rules if necessary",
+                "Test connectivity after change completes"
+            ]
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to change RDS port: {str(e)}"
+        }",
+              },
+              "name": "ChangeRDSInstancePort",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "ChangeRDSInstancePort.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "DBInstanceIdentifier": {
+              "allowedPattern": "^[a-zA-Z][a-zA-Z0-9-]{0,62}$",
+              "description": "(Required) The identifier of the RDS DB instance.",
+              "type": "String",
+            },
+            "NewPort": {
+              "description": "(Required) The new port number for the database.",
+              "type": "Integer",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-ChangeRDSInstancePort",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASRConfigureAPIGatewayAuthorization": {
+      "DependsOn": [
+        "CreateWait17",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-ConfigureAPIGatewayAuthorization
+
+## What does this document do?
+  This document configures authorization on API Gateway routes using
+  [UpdateRoute](https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes-routeid.html) API.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* ApiId: (Required) The API identifier.
+* AuthorizationType: (Optional) The authorization type. Default is AWS_IAM.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: APIGateway.8
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "api_id": "{{ ApiId }}",
+                  "authorization_type": "{{ AuthorizationType }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Configures authorization on API Gateway routes.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_apigatewayv2():
+    return boto3.client("apigatewayv2", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Configures authorization on API Gateway routes.
+    """
+    api_id = event["api_id"]
+    authorization_type = event.get("authorization_type", "AWS_IAM")
+
+    apigw_client = connect_to_apigatewayv2()
+    updated_routes = []
+    errors = []
+
+    try:
+        # Get all routes for the API
+        paginator = apigw_client.get_paginator("get_routes")
+        for page in paginator.paginate(ApiId=api_id):
+            for route in page.get("Items", []):
+                route_id = route["RouteId"]
+                route_key = route.get("RouteKey", "")
+                current_auth = route.get("AuthorizationType", "NONE")
+
+                # Skip routes that already have authorization
+                if current_auth != "NONE":
+                    continue
+
+                try:
+                    apigw_client.update_route(
+                        ApiId=api_id,
+                        RouteId=route_id,
+                        AuthorizationType=authorization_type
+                    )
+                    updated_routes.append(f"{route_key} ({route_id})")
+                except Exception as e:
+                    errors.append(f"Failed to update route {route_key}: {str(e)}")
+
+        if errors:
+            return {
+                "status": "PARTIAL",
+                "message": f"Updated routes: {updated_routes}. Errors: {errors}"
+            }
+
+        if not updated_routes:
+            return {
+                "status": "SUCCESS",
+                "message": f"All routes on API {api_id} already have authorization configured"
+            }
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Authorization ({authorization_type}) configured on routes: {updated_routes}"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to configure authorization: {str(e)}"
+        }",
+              },
+              "name": "ConfigureAPIGatewayAuthorization",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "ConfigureAPIGatewayAuthorization.Output",
+          ],
+          "parameters": {
+            "ApiId": {
+              "allowedPattern": "^[a-z0-9]{10}$",
+              "description": "(Required) The API identifier.",
+              "type": "String",
+            },
+            "AuthorizationType": {
+              "allowedValues": [
+                "AWS_IAM",
+                "JWT",
+                "CUSTOM",
+              ],
+              "default": "AWS_IAM",
+              "description": "(Optional) The authorization type. Default is AWS_IAM.",
+              "type": "String",
+            },
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-ConfigureAPIGatewayAuthorization",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
     "ASRConfigureAutoScalingLaunchConfigNoPublicIP": {
       "DependsOn": [
         "CreateWait14",
@@ -1663,6 +1956,322 @@ Since only the minProvisionedReadCapacity & minProvisionedWriteCapacity are prov
         "DocumentFormat": "YAML",
         "DocumentType": "Automation",
         "Name": "ASR-ConfigureDynamoDBAutoScaling",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASRConfigureLambdaDLQ": {
+      "DependsOn": [
+        "CreateWait16",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-ConfigureLambdaDLQ
+
+## What does this document do?
+  This document configures a dead-letter queue (DLQ) for a Lambda function using
+  [UpdateFunctionConfiguration](https://docs.aws.amazon.com/lambda/latest/dg/API_UpdateFunctionConfiguration.html) API.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* FunctionName: (Required) The name of the Lambda function.
+* DLQTargetArn: (Optional) The ARN of the SQS queue or SNS topic for DLQ. If not provided, creates a new SQS queue.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: Lambda.2
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "dlq_target_arn": "{{ DLQTargetArn }}",
+                  "function_name": "{{ FunctionName }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Configures a dead-letter queue (DLQ) for a Lambda function.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_lambda():
+    return boto3.client("lambda", config=BOTO_CONFIG)
+
+
+def connect_to_sqs():
+    return boto3.client("sqs", config=BOTO_CONFIG)
+
+
+def connect_to_sts():
+    return boto3.client("sts", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Configures a DLQ for a Lambda function.
+    """
+    function_name = event["function_name"]
+    dlq_target_arn = event.get("dlq_target_arn", "")
+
+    lambda_client = connect_to_lambda()
+    sqs_client = connect_to_sqs()
+    sts_client = connect_to_sts()
+
+    try:
+        # Get current function configuration
+        function_config = lambda_client.get_function_configuration(
+            FunctionName=function_name
+        )
+
+        # Check if DLQ is already configured
+        current_dlq = function_config.get("DeadLetterConfig", {}).get("TargetArn", "")
+        if current_dlq:
+            return {
+                "status": "SUCCESS",
+                "message": f"DLQ already configured on function {function_name}: {current_dlq}"
+            }
+
+        # If no DLQ ARN provided, create a new SQS queue
+        if not dlq_target_arn:
+            account_id = sts_client.get_caller_identity()["Account"]
+            region = sqs_client.meta.region_name
+            queue_name = f"{function_name}-dlq"
+            
+            try:
+                response = sqs_client.create_queue(
+                    QueueName=queue_name,
+                    Attributes={
+                        "MessageRetentionPeriod": "1209600",  # 14 days
+                        "VisibilityTimeout": "300"
+                    }
+                )
+                queue_url = response["QueueUrl"]
+                
+                # Get the queue ARN
+                queue_attrs = sqs_client.get_queue_attributes(
+                    QueueUrl=queue_url,
+                    AttributeNames=["QueueArn"]
+                )
+                dlq_target_arn = queue_attrs["Attributes"]["QueueArn"]
+            except sqs_client.exceptions.QueueNameExists:
+                # Queue already exists, get its ARN
+                queue_url = sqs_client.get_queue_url(QueueName=queue_name)["QueueUrl"]
+                queue_attrs = sqs_client.get_queue_attributes(
+                    QueueUrl=queue_url,
+                    AttributeNames=["QueueArn"]
+                )
+                dlq_target_arn = queue_attrs["Attributes"]["QueueArn"]
+
+        # Configure the DLQ on the Lambda function
+        lambda_client.update_function_configuration(
+            FunctionName=function_name,
+            DeadLetterConfig={
+                "TargetArn": dlq_target_arn
+            }
+        )
+
+        return {
+            "status": "SUCCESS",
+            "message": f"DLQ configured on function {function_name}: {dlq_target_arn}"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to configure DLQ: {str(e)}"
+        }",
+              },
+              "name": "ConfigureLambdaDLQ",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "ConfigureLambdaDLQ.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "DLQTargetArn": {
+              "allowedPattern": "^$|^arn:(?:aws|aws-us-gov|aws-cn):(sqs|sns):[a-z0-9-]+:\\d{12}:[a-zA-Z0-9_-]+$",
+              "default": "",
+              "description": "(Optional) The ARN of the SQS queue or SNS topic for DLQ.",
+              "type": "String",
+            },
+            "FunctionName": {
+              "allowedPattern": "^[a-zA-Z0-9-_]{1,64}$",
+              "description": "(Required) The name of the Lambda function.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-ConfigureLambdaDLQ",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASRConfigureLambdaVPC": {
+      "DependsOn": [
+        "CreateWait16",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-ConfigureLambdaVPC
+
+## What does this document do?
+  This document provides information about configuring a Lambda function to run in a VPC.
+  Note: This change may affect the function's ability to access internet resources.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* FunctionName: (Required) The name of the Lambda function.
+* SubnetIds: (Required) The subnet IDs for the VPC configuration.
+* SecurityGroupIds: (Required) The security group IDs for the VPC configuration.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: Lambda.3
+
+## Note
+This control requires careful planning as it may affect internet connectivity.
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "function_name": "{{ FunctionName }}",
+                  "security_group_ids": "{{ SecurityGroupIds }}",
+                  "subnet_ids": "{{ SubnetIds }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Configures a Lambda function to run in a VPC.
+Note: This may affect the function's ability to access internet resources.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_lambda():
+    return boto3.client("lambda", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Configures VPC settings for a Lambda function.
+    """
+    function_name = event["function_name"]
+    subnet_ids = event["subnet_ids"]
+    security_group_ids = event["security_group_ids"]
+
+    lambda_client = connect_to_lambda()
+
+    try:
+        # Get current function configuration
+        function_config = lambda_client.get_function_configuration(
+            FunctionName=function_name
+        )
+
+        # Check if VPC is already configured
+        current_vpc = function_config.get("VpcConfig", {})
+        if current_vpc.get("SubnetIds"):
+            return {
+                "status": "SUCCESS",
+                "message": f"Lambda function {function_name} is already configured with VPC: "
+                          f"Subnets: {current_vpc.get('SubnetIds')}, "
+                          f"Security Groups: {current_vpc.get('SecurityGroupIds')}"
+            }
+
+        # Configure VPC
+        lambda_client.update_function_configuration(
+            FunctionName=function_name,
+            VpcConfig={
+                "SubnetIds": subnet_ids,
+                "SecurityGroupIds": security_group_ids
+            }
+        )
+
+        return {
+            "status": "SUCCESS",
+            "message": f"VPC configured on Lambda function {function_name}. "
+                      f"Subnets: {subnet_ids}, Security Groups: {security_group_ids}",
+            "warnings": [
+                "Function may lose direct internet access",
+                "Consider adding NAT Gateway if internet access is required",
+                "Ensure VPC endpoints exist for AWS services the function uses",
+                "Test function thoroughly after VPC configuration"
+            ]
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to configure VPC: {str(e)}"
+        }",
+              },
+              "name": "ConfigureLambdaVPC",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "ConfigureLambdaVPC.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "FunctionName": {
+              "allowedPattern": "^[a-zA-Z0-9-_]{1,64}$",
+              "description": "(Required) The name of the Lambda function.",
+              "type": "String",
+            },
+            "SecurityGroupIds": {
+              "description": "(Required) The security group IDs for the VPC configuration.",
+              "type": "StringList",
+            },
+            "SubnetIds": {
+              "description": "(Required) The subnet IDs for the VPC configuration.",
+              "type": "StringList",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-ConfigureLambdaVPC",
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -4629,6 +5238,166 @@ def is_open_cidr(rule: dict) -> bool:
         "DocumentFormat": "YAML",
         "DocumentType": "Automation",
         "Name": "ASR-DisableUnrestrictedAccessToHighRiskPorts",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASREnableAPIGatewayAccessLogging": {
+      "DependsOn": [
+        "CreateWait17",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-EnableAPIGatewayAccessLogging
+
+## What does this document do?
+  This document enables access logging on API Gateway stages using
+  [UpdateStage](https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-stages-stagename.html) API.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* ApiId: (Required) The API identifier.
+* StageName: (Required) The stage name.
+* LogGroupArn: (Optional) The ARN of the CloudWatch Logs log group. If not provided, creates a new log group.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: APIGateway.9
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "api_id": "{{ ApiId }}",
+                  "log_group_arn": "{{ LogGroupArn }}",
+                  "stage_name": "{{ StageName }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Enables access logging on API Gateway stages.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_apigatewayv2():
+    return boto3.client("apigatewayv2", config=BOTO_CONFIG)
+
+
+def connect_to_logs():
+    return boto3.client("logs", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Enables access logging on API Gateway stages.
+    """
+    api_id = event["api_id"]
+    stage_name = event["stage_name"]
+    log_group_arn = event.get("log_group_arn", "")
+
+    apigw_client = connect_to_apigatewayv2()
+    logs_client = connect_to_logs()
+
+    try:
+        # Check current stage configuration
+        stage = apigw_client.get_stage(ApiId=api_id, StageName=stage_name)
+        
+        current_logging = stage.get("AccessLogSettings", {})
+        if current_logging.get("DestinationArn"):
+            return {
+                "status": "SUCCESS",
+                "message": f"Access logging already enabled on stage {stage_name}: {current_logging.get('DestinationArn')}"
+            }
+
+        # If no log group ARN provided, create a new log group
+        if not log_group_arn:
+            log_group_name = f"/aws/apigateway/{api_id}/{stage_name}"
+            
+            try:
+                logs_client.create_log_group(logGroupName=log_group_name)
+            except logs_client.exceptions.ResourceAlreadyExistsException:
+                pass  # Log group already exists
+
+            # Get log group ARN
+            response = logs_client.describe_log_groups(
+                logGroupNamePrefix=log_group_name
+            )
+            for lg in response.get("logGroups", []):
+                if lg["logGroupName"] == log_group_name:
+                    log_group_arn = lg["arn"]
+                    break
+
+        # Enable access logging
+        log_format = '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}'
+        
+        apigw_client.update_stage(
+            ApiId=api_id,
+            StageName=stage_name,
+            AccessLogSettings={
+                "DestinationArn": log_group_arn,
+                "Format": log_format
+            }
+        )
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Access logging enabled on stage {stage_name} to {log_group_arn}"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to enable access logging: {str(e)}"
+        }",
+              },
+              "name": "EnableAPIGatewayAccessLogging",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "EnableAPIGatewayAccessLogging.Output",
+          ],
+          "parameters": {
+            "ApiId": {
+              "allowedPattern": "^[a-z0-9]{10}$",
+              "description": "(Required) The API identifier.",
+              "type": "String",
+            },
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "LogGroupArn": {
+              "allowedPattern": "^$|^arn:(?:aws|aws-us-gov|aws-cn):logs:[a-z0-9-]+:\\d{12}:log-group:[a-zA-Z0-9/_.-]+$",
+              "default": "",
+              "description": "(Optional) The ARN of the CloudWatch Logs log group.",
+              "type": "String",
+            },
+            "StageName": {
+              "allowedPattern": "^[a-zA-Z0-9_-]+$",
+              "description": "(Required) The stage name.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-EnableAPIGatewayAccessLogging",
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -8828,6 +9597,139 @@ def handler(event, _):
       },
       "Type": "AWS::SSM::Document",
     },
+    "ASREnableFirehoseEncryption": {
+      "DependsOn": [
+        "CreateWait17",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-EnableFirehoseEncryption
+
+## What does this document do?
+  This document enables server-side encryption on a Kinesis Data Firehose delivery stream using
+  [UpdateDestination](https://docs.aws.amazon.com/firehose/latest/APIReference/API_UpdateDestination.html) API.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* DeliveryStreamName: (Required) The name of the Firehose delivery stream.
+* KeyType: (Optional) The type of encryption key. Default is AWS_OWNED_CMK.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: DataFirehose.1
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "delivery_stream_name": "{{ DeliveryStreamName }}",
+                  "key_type": "{{ KeyType }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Enables server-side encryption on a Kinesis Data Firehose delivery stream.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_firehose():
+    return boto3.client("firehose", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Enables encryption on a Firehose delivery stream.
+    """
+    delivery_stream_name = event["delivery_stream_name"]
+    key_type = event.get("key_type", "AWS_OWNED_CMK")
+
+    firehose_client = connect_to_firehose()
+
+    try:
+        # Get current stream configuration
+        response = firehose_client.describe_delivery_stream(
+            DeliveryStreamName=delivery_stream_name
+        )
+        
+        stream_description = response.get("DeliveryStreamDescription", {})
+        
+        # Check if encryption is already enabled
+        encryption_config = stream_description.get("DeliveryStreamEncryptionConfiguration", {})
+        if encryption_config.get("Status") == "ENABLED":
+            return {
+                "status": "SUCCESS",
+                "message": f"Encryption already enabled on stream {delivery_stream_name}"
+            }
+
+        # Enable encryption
+        firehose_client.start_delivery_stream_encryption(
+            DeliveryStreamName=delivery_stream_name,
+            DeliveryStreamEncryptionConfigurationInput={
+                "KeyType": key_type
+            }
+        )
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Encryption ({key_type}) enabled on stream {delivery_stream_name}"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to enable encryption: {str(e)}"
+        }",
+              },
+              "name": "EnableFirehoseEncryption",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "EnableFirehoseEncryption.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "DeliveryStreamName": {
+              "allowedPattern": "^[a-zA-Z0-9_.-]{1,64}$",
+              "description": "(Required) The name of the Firehose delivery stream.",
+              "type": "String",
+            },
+            "KeyType": {
+              "allowedValues": [
+                "AWS_OWNED_CMK",
+                "CUSTOMER_MANAGED_CMK",
+              ],
+              "default": "AWS_OWNED_CMK",
+              "description": "(Optional) The type of encryption key. Default is AWS_OWNED_CMK.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-EnableFirehoseEncryption",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
     "ASREnableGuardDuty": {
       "DependsOn": [
         "CreateWait12",
@@ -8930,6 +9832,136 @@ def lambda_handler(_, __):
         "DocumentFormat": "YAML",
         "DocumentType": "Automation",
         "Name": "ASR-EnableGuardDuty",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASREnableIAMUserMFA": {
+      "DependsOn": [
+        "CreateWait16",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-EnableIAMUserMFA
+
+## What does this document do?
+  This document provides information about enabling MFA for an IAM user.
+  Note: MFA setup requires user interaction and cannot be fully automated.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* IAMUserName: (Required) The name of the IAM user.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: IAM.19
+
+## Note
+This control requires user action to complete MFA setup.
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "iam_user_name": "{{ IAMUserName }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Checks and provides remediation steps for enabling MFA for an IAM user.
+Note: MFA setup requires user interaction and cannot be fully automated.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_iam():
+    return boto3.client("iam", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Checks MFA status and provides remediation guidance.
+    """
+    iam_user_name = event["iam_user_name"]
+
+    iam_client = connect_to_iam()
+
+    try:
+        # Check if MFA is already enabled
+        response = iam_client.list_mfa_devices(UserName=iam_user_name)
+        mfa_devices = response.get("MFADevices", [])
+
+        if mfa_devices:
+            return {
+                "status": "SUCCESS",
+                "message": f"MFA is already enabled for user {iam_user_name}. "
+                          f"MFA devices: {[d['SerialNumber'] for d in mfa_devices]}"
+            }
+
+        # MFA is not enabled - provide remediation guidance
+        return {
+            "status": "MANUAL_REMEDIATION_REQUIRED",
+            "message": f"MFA is not enabled for user {iam_user_name}. "
+                      "MFA setup requires user interaction.",
+            "remediation_steps": [
+                f"1. Sign in to AWS Console as user {iam_user_name}",
+                "2. Navigate to IAM > Users > Security credentials",
+                "3. In the Multi-factor authentication section, click 'Assign MFA device'",
+                "4. Choose the MFA device type (Virtual MFA, Hardware, or Security Key)",
+                "5. Follow the setup instructions for the chosen device type",
+                "6. Complete MFA registration by entering two consecutive codes"
+            ],
+            "alternative_steps": [
+                "An administrator can create a virtual MFA device for the user:",
+                f"   aws iam create-virtual-mfa-device --virtual-mfa-device-name {iam_user_name}-mfa",
+                "   Then provide the QR code/secret to the user for setup",
+                f"   aws iam enable-mfa-device --user-name {iam_user_name} --serial-number <mfa-serial> --authentication-code1 <code1> --authentication-code2 <code2>"
+            ],
+            "note": "The user must complete MFA setup themselves for virtual/hardware MFA devices"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to check MFA status: {str(e)}"
+        }",
+              },
+              "name": "EnableIAMUserMFA",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "EnableIAMUserMFA.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "IAMUserName": {
+              "allowedPattern": "^[\\w+=,.@-]{1,64}$",
+              "description": "(Required) The name of the IAM user.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-EnableIAMUserMFA",
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -9788,6 +10820,131 @@ Verifies that deletion protection has been enabled for the given Amazon RDS data
       },
       "Type": "AWS::SSM::Document",
     },
+    "ASREnableRDSClusterIAMAuthentication": {
+      "DependsOn": [
+        "CreateWait15",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-EnableRDSClusterIAMAuthentication
+
+## What does this document do?
+  This document enables IAM database authentication on an RDS cluster using
+  [ModifyDBCluster](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_ModifyDBCluster.html) API.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* DBClusterIdentifier: (Required) The identifier of the RDS DB cluster.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: RDS.12
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "db_cluster_identifier": "{{ DBClusterIdentifier }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Enables IAM authentication on an RDS cluster.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_rds():
+    return boto3.client("rds", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Enables IAM database authentication on an RDS cluster.
+    """
+    db_cluster_identifier = event["db_cluster_identifier"]
+
+    rds_client = connect_to_rds()
+
+    try:
+        # Get current cluster info
+        response = rds_client.describe_db_clusters(
+            DBClusterIdentifier=db_cluster_identifier
+        )
+        
+        if not response.get("DBClusters"):
+            return {
+                "status": "FAILED",
+                "message": f"RDS cluster {db_cluster_identifier} not found"
+            }
+        
+        cluster = response["DBClusters"][0]
+        
+        # Check if IAM authentication is already enabled
+        if cluster.get("IAMDatabaseAuthenticationEnabled", False):
+            return {
+                "status": "SUCCESS",
+                "message": f"IAM authentication is already enabled on cluster {db_cluster_identifier}"
+            }
+
+        # Enable IAM authentication
+        rds_client.modify_db_cluster(
+            DBClusterIdentifier=db_cluster_identifier,
+            EnableIAMDatabaseAuthentication=True,
+            ApplyImmediately=True
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "message": f"IAM authentication enabled on RDS cluster {db_cluster_identifier}"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to enable IAM authentication: {str(e)}"
+        }",
+              },
+              "name": "EnableRDSClusterIAMAuthentication",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "EnableRDSClusterIAMAuthentication.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "DBClusterIdentifier": {
+              "allowedPattern": "^[a-zA-Z][a-zA-Z0-9-]{0,62}$",
+              "description": "(Required) The identifier of the RDS DB cluster.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-EnableRDSClusterIAMAuthentication",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
     "ASREnableRDSInstanceDeletionProtection": {
       "DependsOn": [
         "CreateWait6",
@@ -10076,6 +11233,408 @@ Checks whether the value of the "BucketName" parameter is used for the audit log
         "DocumentFormat": "YAML",
         "DocumentType": "Automation",
         "Name": "ASR-EnableRedshiftClusterAuditLogging",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASREnableS3CrossRegionReplication": {
+      "DependsOn": [
+        "CreateWait15",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-EnableS3CrossRegionReplication
+
+## What does this document do?
+  This document enables cross-region replication on an S3 bucket using
+  [PutBucketReplication](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketReplication.html) API.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* BucketName: (Required) The name of the S3 bucket.
+* DestinationBucketArn: (Required) The ARN of the destination bucket for replication.
+* ReplicationRoleArn: (Required) The ARN of the IAM role for replication.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: S3.7
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "bucket_name": "{{ BucketName }}",
+                  "destination_bucket_arn": "{{ DestinationBucketArn }}",
+                  "replication_role_arn": "{{ ReplicationRoleArn }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Enables cross-region replication on an S3 bucket.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_s3():
+    return boto3.client("s3", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Enables cross-region replication on an S3 bucket.
+    """
+    bucket_name = event["bucket_name"]
+    destination_bucket_arn = event["destination_bucket_arn"]
+    replication_role_arn = event["replication_role_arn"]
+
+    s3_client = connect_to_s3()
+
+    # First, ensure versioning is enabled (required for replication)
+    try:
+        s3_client.put_bucket_versioning(
+            Bucket=bucket_name,
+            VersioningConfiguration={"Status": "Enabled"}
+        )
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to enable versioning on bucket {bucket_name}: {str(e)}"
+        }
+
+    # Configure replication
+    replication_config = {
+        "Role": replication_role_arn,
+        "Rules": [
+            {
+                "ID": "ASR-CrossRegionReplication",
+                "Status": "Enabled",
+                "Priority": 1,
+                "DeleteMarkerReplication": {"Status": "Disabled"},
+                "Filter": {"Prefix": ""},
+                "Destination": {
+                    "Bucket": destination_bucket_arn,
+                    "ReplicaModifications": {"Status": "Enabled"},
+                }
+            }
+        ]
+    }
+
+    try:
+        s3_client.put_bucket_replication(
+            Bucket=bucket_name,
+            ReplicationConfiguration=replication_config
+        )
+        return {
+            "status": "SUCCESS",
+            "message": f"Cross-region replication enabled on bucket {bucket_name} to {destination_bucket_arn}"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to enable cross-region replication: {str(e)}"
+        }",
+              },
+              "name": "EnableS3CrossRegionReplication",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "EnableS3CrossRegionReplication.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "BucketName": {
+              "allowedPattern": "^[a-z0-9][a-z0-9\\-]{1,61}[a-z0-9]$",
+              "description": "(Required) The name of the S3 bucket.",
+              "type": "String",
+            },
+            "DestinationBucketArn": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):s3:::[a-z0-9][a-z0-9\\-]{1,61}[a-z0-9]$",
+              "description": "(Required) The ARN of the destination bucket for replication.",
+              "type": "String",
+            },
+            "ReplicationRoleArn": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the IAM role for replication.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-EnableS3CrossRegionReplication",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASREnableS3MFADelete": {
+      "DependsOn": [
+        "CreateWait15",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-EnableS3MFADelete
+
+## What does this document do?
+  This document provides information about enabling MFA delete on an S3 bucket.
+  Note: MFA delete can only be enabled by the root account using the AWS CLI.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* BucketName: (Required) The name of the S3 bucket.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: S3.20
+
+## Note
+This control cannot be fully automated. MFA Delete requires root account credentials.
+This runbook will verify the current state and provide remediation instructions.
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "bucket_name": "{{ BucketName }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Checks and provides remediation steps for S3 MFA Delete.
+Note: MFA Delete can only be enabled by the root account.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_s3():
+    return boto3.client("s3", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Checks MFA Delete status and provides remediation guidance.
+    """
+    bucket_name = event["bucket_name"]
+
+    s3_client = connect_to_s3()
+
+    try:
+        # Check current versioning configuration
+        response = s3_client.get_bucket_versioning(Bucket=bucket_name)
+        mfa_delete = response.get("MFADelete", "Disabled")
+        versioning = response.get("Status", "Disabled")
+
+        if mfa_delete == "Enabled":
+            return {
+                "status": "SUCCESS",
+                "message": f"MFA Delete is already enabled on bucket {bucket_name}"
+            }
+
+        # MFA Delete is not enabled - provide remediation guidance
+        return {
+            "status": "MANUAL_REMEDIATION_REQUIRED",
+            "message": f"MFA Delete cannot be enabled automatically on bucket {bucket_name}. "
+                      "MFA Delete requires root account credentials and must be enabled via AWS CLI. "
+                      "Current versioning status: {versioning}",
+            "remediation_steps": [
+                "1. Sign in to AWS as the root user",
+                "2. Enable MFA on the root account if not already enabled",
+                "3. Run the following AWS CLI command with root credentials:",
+                f"   aws s3api put-bucket-versioning --bucket {bucket_name} "
+                "--versioning-configuration Status=Enabled,MFADelete=Enabled "
+                "--mfa 'arn:aws:iam::ACCOUNT_ID:mfa/root-account-mfa-device TOTP_CODE'",
+                "4. Replace ACCOUNT_ID with your AWS account ID",
+                "5. Replace TOTP_CODE with the current code from your MFA device"
+            ],
+            "note": "This operation can only be performed by the root account holder"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to check MFA Delete status: {str(e)}"
+        }",
+              },
+              "name": "EnableS3MFADelete",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "EnableS3MFADelete.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "BucketName": {
+              "allowedPattern": "^[a-z0-9][a-z0-9\\-]{1,61}[a-z0-9]$",
+              "description": "(Required) The name of the S3 bucket.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-EnableS3MFADelete",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASREnableS3ObjectLock": {
+      "DependsOn": [
+        "CreateWait15",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-EnableS3ObjectLock
+
+## What does this document do?
+  This document documents the manual steps required to enable S3 Object Lock on a bucket.
+  Object Lock cannot be enabled on existing buckets - the bucket must be recreated.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* BucketName: (Required) The name of the S3 bucket.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: S3.15
+
+## Note
+This control cannot be fully automated. Object Lock must be enabled at bucket creation time.
+This runbook will verify the current state and provide remediation steps.
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "bucket_name": "{{ BucketName }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Checks and provides remediation steps for S3 Object Lock.
+Note: Object Lock cannot be enabled on existing buckets.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_s3():
+    return boto3.client("s3", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Checks Object Lock status and provides remediation guidance.
+    """
+    bucket_name = event["bucket_name"]
+
+    s3_client = connect_to_s3()
+
+    try:
+        # Check if Object Lock is enabled
+        try:
+            response = s3_client.get_object_lock_configuration(Bucket=bucket_name)
+            if response.get("ObjectLockConfiguration", {}).get("ObjectLockEnabled") == "Enabled":
+                return {
+                    "status": "SUCCESS",
+                    "message": f"Object Lock is already enabled on bucket {bucket_name}"
+                }
+        except s3_client.exceptions.ObjectLockConfigurationNotFoundError:
+            pass
+
+        # Object Lock is not enabled - provide remediation guidance
+        return {
+            "status": "MANUAL_REMEDIATION_REQUIRED",
+            "message": f"Object Lock cannot be enabled on existing bucket {bucket_name}. "
+                      "To remediate this finding, you must: "
+                      "1. Create a new bucket with Object Lock enabled "
+                      "2. Copy all objects from the original bucket to the new bucket "
+                      "3. Update applications to use the new bucket "
+                      "4. Delete the original bucket (after verifying data migration)",
+            "remediation_steps": [
+                f"aws s3api create-bucket --bucket {bucket_name}-new --object-lock-enabled-for-bucket",
+                f"aws s3 sync s3://{bucket_name} s3://{bucket_name}-new",
+                "Update application configuration to use the new bucket",
+                f"aws s3 rb s3://{bucket_name} --force (after verification)"
+            ]
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to check Object Lock status: {str(e)}"
+        }",
+              },
+              "name": "EnableS3ObjectLock",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "EnableS3ObjectLock.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "BucketName": {
+              "allowedPattern": "^[a-z0-9][a-z0-9\\-]{1,61}[a-z0-9]$",
+              "description": "(Required) The name of the S3 bucket.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-EnableS3ObjectLock",
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -10459,6 +12018,159 @@ def enable_flow_logs(event, _):
         "DocumentFormat": "YAML",
         "DocumentType": "Automation",
         "Name": "ASR-EnableVPCFlowLogs",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASREnableWAFLogging": {
+      "DependsOn": [
+        "CreateWait17",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-EnableWAFLogging
+
+## What does this document do?
+  This document enables logging on a WAF Web ACL using
+  [PutLoggingConfiguration](https://docs.aws.amazon.com/waf/latest/APIReference/API_PutLoggingConfiguration.html) API.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* WebAclArn: (Required) The ARN of the WAF Web ACL.
+* LogDestinationConfigs: (Optional) The ARN of the logging destination. If not provided, creates CloudWatch log group.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: WAF.11
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "log_destination_configs": "{{ LogDestinationConfigs }}",
+                  "web_acl_arn": "{{ WebAclArn }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Enables logging on a WAF Web ACL.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_wafv2():
+    return boto3.client("wafv2", config=BOTO_CONFIG)
+
+
+def connect_to_logs():
+    return boto3.client("logs", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Enables logging on a WAF Web ACL.
+    """
+    web_acl_arn = event["web_acl_arn"]
+    log_destination_configs = event.get("log_destination_configs", "")
+
+    waf_client = connect_to_wafv2()
+    logs_client = connect_to_logs()
+
+    try:
+        # Check if logging is already enabled
+        try:
+            existing_config = waf_client.get_logging_configuration(
+                ResourceArn=web_acl_arn
+            )
+            if existing_config.get("LoggingConfiguration"):
+                return {
+                    "status": "SUCCESS",
+                    "message": f"Logging already enabled on Web ACL {web_acl_arn}"
+                }
+        except waf_client.exceptions.WAFNonexistentItemException:
+            pass  # No logging configuration exists, proceed to create one
+
+        # If no log destination provided, create a CloudWatch log group
+        if not log_destination_configs:
+            # Extract Web ACL name from ARN
+            web_acl_name = web_acl_arn.split("/")[-2]
+            log_group_name = f"aws-waf-logs-{web_acl_name}"
+            
+            try:
+                logs_client.create_log_group(logGroupName=log_group_name)
+            except logs_client.exceptions.ResourceAlreadyExistsException:
+                pass  # Log group already exists
+
+            # Get log group ARN
+            response = logs_client.describe_log_groups(
+                logGroupNamePrefix=log_group_name
+            )
+            for lg in response.get("logGroups", []):
+                if lg["logGroupName"] == log_group_name:
+                    log_destination_configs = lg["arn"]
+                    break
+
+        # Enable logging
+        waf_client.put_logging_configuration(
+            LoggingConfiguration={
+                "ResourceArn": web_acl_arn,
+                "LogDestinationConfigs": [log_destination_configs]
+            }
+        )
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Logging enabled on Web ACL {web_acl_arn} to {log_destination_configs}"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to enable WAF logging: {str(e)}"
+        }",
+              },
+              "name": "EnableWAFLogging",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "EnableWAFLogging.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "LogDestinationConfigs": {
+              "allowedPattern": "^$|^arn:(?:aws|aws-us-gov|aws-cn):[a-z0-9-]+:[a-z0-9-]*:\\d{12}:.+$",
+              "default": "",
+              "description": "(Optional) The ARN of the logging destination (CloudWatch log group, S3 bucket, or Firehose).",
+              "type": "String",
+            },
+            "WebAclArn": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):wafv2:[a-z0-9-]+:\\d{12}:(?:regional|global)/webacl/[a-zA-Z0-9_-]+/[a-f0-9-]+$",
+              "description": "(Required) The ARN of the WAF Web ACL.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-EnableWAFLogging",
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -11462,6 +13174,381 @@ def get_project_info(project_name):
         "DocumentFormat": "YAML",
         "DocumentType": "Automation",
         "Name": "ASR-RemoveCodeBuildPrivilegedMode",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASRRemoveIAMUserDirectPolicies": {
+      "DependsOn": [
+        "CreateWait16",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-RemoveIAMUserDirectPolicies
+
+## What does this document do?
+  This document removes directly attached IAM policies from an IAM user using
+  [DetachUserPolicy](https://docs.aws.amazon.com/IAM/latest/APIReference/API_DetachUserPolicy.html) and
+  [DeleteUserPolicy](https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeleteUserPolicy.html) APIs.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* IAMUserName: (Required) The name of the IAM user.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: IAM.2
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "iam_user_name": "{{ IAMUserName }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Removes directly attached IAM policies from an IAM user.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_iam():
+    return boto3.client("iam", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Removes directly attached IAM policies from an IAM user.
+    """
+    iam_user_name = event["iam_user_name"]
+
+    iam_client = connect_to_iam()
+    removed_policies = []
+    errors = []
+
+    try:
+        # Remove attached managed policies
+        paginator = iam_client.get_paginator("list_attached_user_policies")
+        for page in paginator.paginate(UserName=iam_user_name):
+            for policy in page.get("AttachedPolicies", []):
+                try:
+                    iam_client.detach_user_policy(
+                        UserName=iam_user_name,
+                        PolicyArn=policy["PolicyArn"]
+                    )
+                    removed_policies.append(f"Detached: {policy['PolicyArn']}")
+                except Exception as e:
+                    errors.append(f"Failed to detach {policy['PolicyArn']}: {str(e)}")
+
+        # Remove inline policies
+        paginator = iam_client.get_paginator("list_user_policies")
+        for page in paginator.paginate(UserName=iam_user_name):
+            for policy_name in page.get("PolicyNames", []):
+                try:
+                    iam_client.delete_user_policy(
+                        UserName=iam_user_name,
+                        PolicyName=policy_name
+                    )
+                    removed_policies.append(f"Deleted inline: {policy_name}")
+                except Exception as e:
+                    errors.append(f"Failed to delete inline {policy_name}: {str(e)}")
+
+        if errors:
+            return {
+                "status": "PARTIAL",
+                "message": f"Removed policies: {removed_policies}. Errors: {errors}"
+            }
+        
+        if not removed_policies:
+            return {
+                "status": "SUCCESS",
+                "message": f"No direct policies found on user {iam_user_name}"
+            }
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Removed direct policies from user {iam_user_name}: {removed_policies}"
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to remove direct policies: {str(e)}"
+        }",
+              },
+              "name": "RemoveIAMUserDirectPolicies",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "RemoveIAMUserDirectPolicies.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "IAMUserName": {
+              "allowedPattern": "^[\\w+=,.@-]{1,64}$",
+              "description": "(Required) The name of the IAM user.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-RemoveIAMUserDirectPolicies",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ASRRemoveKMSInlinePolicies": {
+      "DependsOn": [
+        "CreateWait18",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-RemoveKMSInlinePolicies
+
+## What does this document do?
+  This document reviews and removes overly permissive KMS inline policies from IAM principals.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* PrincipalArn: (Required) The ARN of the IAM principal (user, role, or group).
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: KMS.2
+
+## Note
+This control requires careful review to avoid breaking application dependencies.
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "principal_arn": "{{ PrincipalArn }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Reviews and removes overly permissive KMS inline policies from IAM principals.
+"""
+import boto3
+import json
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+# KMS actions that are considered high-risk when allowed with wildcard resources
+HIGH_RISK_KMS_ACTIONS = [
+    "kms:*",
+    "kms:Decrypt",
+    "kms:Encrypt",
+    "kms:ReEncrypt*",
+    "kms:GenerateDataKey*",
+    "kms:CreateGrant",
+    "kms:DescribeKey"
+]
+
+
+def connect_to_iam():
+    return boto3.client("iam", config=BOTO_CONFIG)
+
+
+def get_principal_type(principal_arn):
+    """Determine the type of IAM principal from ARN."""
+    if ":user/" in principal_arn:
+        return "user"
+    elif ":role/" in principal_arn:
+        return "role"
+    elif ":group/" in principal_arn:
+        return "group"
+    return None
+
+
+def get_principal_name(principal_arn):
+    """Extract principal name from ARN."""
+    return principal_arn.split("/")[-1]
+
+
+def check_policy_for_kms_issues(policy_document):
+    """Check if a policy has overly permissive KMS statements."""
+    issues = []
+    
+    if isinstance(policy_document, str):
+        policy_document = json.loads(policy_document)
+    
+    statements = policy_document.get("Statement", [])
+    if not isinstance(statements, list):
+        statements = [statements]
+    
+    for stmt in statements:
+        if stmt.get("Effect") != "Allow":
+            continue
+        
+        actions = stmt.get("Action", [])
+        if isinstance(actions, str):
+            actions = [actions]
+        
+        resources = stmt.get("Resource", [])
+        if isinstance(resources, str):
+            resources = [resources]
+        
+        # Check for high-risk KMS actions with wildcard resources
+        for action in actions:
+            if any(action == risk_action or action.startswith(risk_action.replace("*", "")) 
+                   for risk_action in HIGH_RISK_KMS_ACTIONS):
+                if "*" in resources or any("*" in r for r in resources):
+                    issues.append({
+                        "action": action,
+                        "resources": resources,
+                        "statement": stmt
+                    })
+    
+    return issues
+
+
+def lambda_handler(event, _):
+    """
+    Reviews and reports on KMS inline policies for an IAM principal.
+    """
+    principal_arn = event["principal_arn"]
+
+    iam_client = connect_to_iam()
+    
+    principal_type = get_principal_type(principal_arn)
+    principal_name = get_principal_name(principal_arn)
+    
+    if not principal_type:
+        return {
+            "status": "FAILED",
+            "message": f"Unable to determine principal type from ARN: {principal_arn}"
+        }
+
+    findings = []
+    
+    try:
+        # Get inline policies based on principal type
+        if principal_type == "user":
+            paginator = iam_client.get_paginator("list_user_policies")
+            for page in paginator.paginate(UserName=principal_name):
+                for policy_name in page.get("PolicyNames", []):
+                    policy_response = iam_client.get_user_policy(
+                        UserName=principal_name,
+                        PolicyName=policy_name
+                    )
+                    issues = check_policy_for_kms_issues(policy_response["PolicyDocument"])
+                    if issues:
+                        findings.append({
+                            "policy_name": policy_name,
+                            "issues": issues
+                        })
+        
+        elif principal_type == "role":
+            paginator = iam_client.get_paginator("list_role_policies")
+            for page in paginator.paginate(RoleName=principal_name):
+                for policy_name in page.get("PolicyNames", []):
+                    policy_response = iam_client.get_role_policy(
+                        RoleName=principal_name,
+                        PolicyName=policy_name
+                    )
+                    issues = check_policy_for_kms_issues(policy_response["PolicyDocument"])
+                    if issues:
+                        findings.append({
+                            "policy_name": policy_name,
+                            "issues": issues
+                        })
+        
+        elif principal_type == "group":
+            paginator = iam_client.get_paginator("list_group_policies")
+            for page in paginator.paginate(GroupName=principal_name):
+                for policy_name in page.get("PolicyNames", []):
+                    policy_response = iam_client.get_group_policy(
+                        GroupName=principal_name,
+                        PolicyName=policy_name
+                    )
+                    issues = check_policy_for_kms_issues(policy_response["PolicyDocument"])
+                    if issues:
+                        findings.append({
+                            "policy_name": policy_name,
+                            "issues": issues
+                        })
+
+        if not findings:
+            return {
+                "status": "SUCCESS",
+                "message": f"No overly permissive KMS inline policies found for {principal_type} {principal_name}"
+            }
+
+        return {
+            "status": "MANUAL_REMEDIATION_REQUIRED",
+            "message": f"Found {len(findings)} inline policies with overly permissive KMS actions for {principal_type} {principal_name}",
+            "findings": findings,
+            "remediation_steps": [
+                "Review each identified policy and its KMS-related statements",
+                "Replace wildcard (*) resources with specific KMS key ARNs",
+                "Apply principle of least privilege - only grant necessary KMS actions",
+                "Consider using KMS key policies instead of IAM policies for KMS access",
+                "Test applications after policy changes to ensure functionality"
+            ]
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to review KMS inline policies: {str(e)}"
+        }",
+              },
+              "name": "RemoveKMSInlinePolicies",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "RemoveKMSInlinePolicies.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "PrincipalArn": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:(user|role|group)/[\\w+=,.@/-]+$",
+              "description": "(Required) The ARN of the IAM principal.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-RemoveKMSInlinePolicies",
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -14160,6 +16247,156 @@ def get_required_tags_from_event(event):
       },
       "Type": "AWS::SSM::Document",
     },
+    "ASRUpdateLambdaRuntime": {
+      "DependsOn": [
+        "CreateWait17",
+      ],
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "### Document name - ASR-UpdateLambdaRuntime
+
+## What does this document do?
+  This document provides information about updating a Lambda function runtime.
+  Note: Runtime updates may require code changes and testing.
+
+## Input Parameters
+* AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+* FunctionName: (Required) The name of the Lambda function.
+* NewRuntime: (Required) The new runtime version.
+
+## Security Standards / Controls
+* AWS FSBP v1.0.0: Lambda.7
+
+## Note
+This control requires code testing before deployment.
+",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "lambda_handler",
+                "InputPayload": {
+                  "function_name": "{{ FunctionName }}",
+                  "new_runtime": "{{ NewRuntime }}",
+                },
+                "Runtime": "python3.11",
+                "Script": "# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+Updates the runtime of a Lambda function.
+Note: Runtime updates may require code changes and testing.
+"""
+import boto3
+from botocore.config import Config
+
+BOTO_CONFIG = Config(retries={"mode": "standard", "max_attempts": 10})
+
+
+def connect_to_lambda():
+    return boto3.client("lambda", config=BOTO_CONFIG)
+
+
+def lambda_handler(event, _):
+    """
+    Updates the runtime of a Lambda function.
+    """
+    function_name = event["function_name"]
+    new_runtime = event["new_runtime"]
+
+    lambda_client = connect_to_lambda()
+
+    try:
+        # Get current function configuration
+        function_config = lambda_client.get_function_configuration(
+            FunctionName=function_name
+        )
+
+        current_runtime = function_config.get("Runtime")
+        
+        # Check if runtime is already correct
+        if current_runtime == new_runtime:
+            return {
+                "status": "SUCCESS",
+                "message": f"Lambda function {function_name} is already using runtime {new_runtime}"
+            }
+
+        # Update runtime
+        lambda_client.update_function_configuration(
+            FunctionName=function_name,
+            Runtime=new_runtime
+        )
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Runtime updated on Lambda function {function_name} from {current_runtime} to {new_runtime}",
+            "warnings": [
+                f"Previous runtime: {current_runtime}",
+                f"New runtime: {new_runtime}",
+                "Test function thoroughly after runtime update",
+                "Check for deprecated features or breaking changes",
+                "Review Lambda documentation for migration guides"
+            ]
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "message": f"Failed to update runtime: {str(e)}"
+        }",
+              },
+              "name": "UpdateLambdaRuntime",
+              "outputs": [
+                {
+                  "Name": "Output",
+                  "Selector": "$.Payload",
+                  "Type": "StringMap",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
+          ],
+          "outputs": [
+            "UpdateLambdaRuntime.Output",
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "allowedPattern": "^arn:(?:aws|aws-us-gov|aws-cn):iam::\\d{12}:role/[\\w+=,.@-]+$",
+              "description": "(Required) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "FunctionName": {
+              "allowedPattern": "^[a-zA-Z0-9-_]{1,64}$",
+              "description": "(Required) The name of the Lambda function.",
+              "type": "String",
+            },
+            "NewRuntime": {
+              "allowedValues": [
+                "python3.11",
+                "python3.12",
+                "python3.13",
+                "nodejs18.x",
+                "nodejs20.x",
+                "nodejs22.x",
+                "java17",
+                "java21",
+                "dotnet6",
+                "dotnet8",
+                "ruby3.2",
+                "ruby3.3",
+              ],
+              "description": "(Required) The new runtime version.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentFormat": "YAML",
+        "DocumentType": "Automation",
+        "Name": "ASR-UpdateLambdaRuntime",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
     "ASRUpdateSecretRotationPeriod": {
       "DependsOn": [
         "CreateWait12",
@@ -14420,6 +16657,57 @@ def lambda_handler(event, _):
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CreateWait14",
+      ],
+      "Properties": {
+        "CreateIntervalSeconds": 1,
+        "DeleteIntervalSeconds": 0,
+        "DocumentPropertiesHash": "Omitted to remove snapshot dependency on document hash",
+        "ServiceToken": {
+          "Ref": "WaitProviderServiceToken",
+        },
+        "UpdateIntervalSeconds": 1,
+      },
+      "Type": "Custom::Wait",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CreateWait16": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CreateWait15",
+      ],
+      "Properties": {
+        "CreateIntervalSeconds": 1,
+        "DeleteIntervalSeconds": 0,
+        "DocumentPropertiesHash": "Omitted to remove snapshot dependency on document hash",
+        "ServiceToken": {
+          "Ref": "WaitProviderServiceToken",
+        },
+        "UpdateIntervalSeconds": 1,
+      },
+      "Type": "Custom::Wait",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CreateWait17": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CreateWait16",
+      ],
+      "Properties": {
+        "CreateIntervalSeconds": 1,
+        "DeleteIntervalSeconds": 0,
+        "DocumentPropertiesHash": "Omitted to remove snapshot dependency on document hash",
+        "ServiceToken": {
+          "Ref": "WaitProviderServiceToken",
+        },
+        "UpdateIntervalSeconds": 1,
+      },
+      "Type": "Custom::Wait",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CreateWait18": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CreateWait17",
       ],
       "Properties": {
         "CreateIntervalSeconds": 1,
@@ -14726,7 +17014,73 @@ def lambda_handler(event, _):
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "ASREnableAthenaWorkGroupLogging",
+        "ASREnableRDSClusterIAMAuthentication",
+        "ASREnableS3CrossRegionReplication",
+        "ASREnableS3MFADelete",
+        "ASREnableS3ObjectLock",
         "DeletWait14",
+      ],
+      "Properties": {
+        "CreateIntervalSeconds": 0,
+        "DeleteIntervalSeconds": 0.5,
+        "DocumentPropertiesHash": "Omitted to remove snapshot dependency on document hash",
+        "ServiceToken": {
+          "Ref": "WaitProviderServiceToken",
+        },
+        "UpdateIntervalSeconds": 0,
+      },
+      "Type": "Custom::Wait",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DeletWait16": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ASRChangeRDSInstancePort",
+        "ASRConfigureLambdaDLQ",
+        "ASRConfigureLambdaVPC",
+        "ASREnableIAMUserMFA",
+        "ASRRemoveIAMUserDirectPolicies",
+        "DeletWait15",
+      ],
+      "Properties": {
+        "CreateIntervalSeconds": 0,
+        "DeleteIntervalSeconds": 0.5,
+        "DocumentPropertiesHash": "Omitted to remove snapshot dependency on document hash",
+        "ServiceToken": {
+          "Ref": "WaitProviderServiceToken",
+        },
+        "UpdateIntervalSeconds": 0,
+      },
+      "Type": "Custom::Wait",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DeletWait17": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ASRConfigureAPIGatewayAuthorization",
+        "ASREnableAPIGatewayAccessLogging",
+        "ASREnableFirehoseEncryption",
+        "ASREnableWAFLogging",
+        "ASRUpdateLambdaRuntime",
+        "DeletWait16",
+      ],
+      "Properties": {
+        "CreateIntervalSeconds": 0,
+        "DeleteIntervalSeconds": 0.5,
+        "DocumentPropertiesHash": "Omitted to remove snapshot dependency on document hash",
+        "ServiceToken": {
+          "Ref": "WaitProviderServiceToken",
+        },
+        "UpdateIntervalSeconds": 0,
+      },
+      "Type": "Custom::Wait",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DeletWait18": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ASRRemoveKMSInlinePolicies",
+        "DeletWait17",
       ],
       "Properties": {
         "CreateIntervalSeconds": 0,

@@ -1,0 +1,58 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-EnableS3CrossRegionReplication
+
+  ## What does this document do?
+    This document enables cross-region replication on an S3 bucket using
+    [PutBucketReplication](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketReplication.html) API.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * BucketName: (Required) The name of the S3 bucket.
+  * DestinationBucketArn: (Required) The ARN of the destination bucket for replication.
+  * ReplicationRoleArn: (Required) The ARN of the IAM role for replication.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: S3.7
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  BucketName:
+    type: String
+    description: (Required) The name of the S3 bucket.
+    allowedPattern: '^[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$'
+  DestinationBucketArn:
+    type: String
+    description: (Required) The ARN of the destination bucket for replication.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):s3:::[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$'
+  ReplicationRoleArn:
+    type: String
+    description: (Required) The ARN of the IAM role for replication.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+
+outputs:
+  - EnableS3CrossRegionReplication.Output
+mainSteps:
+- name: 'EnableS3CrossRegionReplication'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      bucket_name: '{{ BucketName }}'
+      destination_bucket_arn: '{{ DestinationBucketArn }}'
+      replication_role_arn: '{{ ReplicationRoleArn }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=enable_s3_cross_region_replication.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

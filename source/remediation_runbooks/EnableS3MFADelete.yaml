@@ -1,0 +1,50 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-EnableS3MFADelete
+
+  ## What does this document do?
+    This document provides information about enabling MFA delete on an S3 bucket.
+    Note: MFA delete can only be enabled by the root account using the AWS CLI.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * BucketName: (Required) The name of the S3 bucket.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: S3.20
+
+  ## Note
+  This control cannot be fully automated. MFA Delete requires root account credentials.
+  This runbook will verify the current state and provide remediation instructions.
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  BucketName:
+    type: String
+    description: (Required) The name of the S3 bucket.
+    allowedPattern: '^[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$'
+
+outputs:
+  - EnableS3MFADelete.Output
+mainSteps:
+- name: 'EnableS3MFADelete'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      bucket_name: '{{ BucketName }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=enable_s3_mfa_delete.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

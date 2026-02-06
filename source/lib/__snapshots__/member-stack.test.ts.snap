@@ -19,14 +19,6 @@ exports[`member stack snapshot matches 1`] = `
         "yes",
       ],
     },
-    "loadAFSBP1Cond": {
-      "Fn::Equals": [
-        {
-          "Ref": "LoadAFSBPMemberStack",
-        },
-        "yes",
-      ],
-    },
     "loadAFSBPCond": {
       "Fn::Equals": [
         {
@@ -59,14 +51,6 @@ exports[`member stack snapshot matches 1`] = `
         "yes",
       ],
     },
-    "loadNIST800531Cond": {
-      "Fn::Equals": [
-        {
-          "Ref": "LoadNIST80053MemberStack",
-        },
-        "yes",
-      ],
-    },
     "loadNIST80053Cond": {
       "Fn::Equals": [
         {
@@ -79,14 +63,6 @@ exports[`member stack snapshot matches 1`] = `
       "Fn::Equals": [
         {
           "Ref": "LoadPCI321MemberStack",
-        },
-        "yes",
-      ],
-    },
-    "loadSC1Cond": {
-      "Fn::Equals": [
-        {
-          "Ref": "LoadSCMemberStack",
         },
         "yes",
       ],
@@ -583,15 +559,6 @@ exports[`member stack snapshot matches 1`] = `
     },
     "NestedStackFactoryGateMemberCloudTrailStackD769B835": {
       "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackAFSBPReady": {
           "Fn::If": [
             "loadAFSBPCond",
@@ -628,15 +595,6 @@ exports[`member stack snapshot matches 1`] = `
             "",
           ],
         },
-        "PlaybookMemberStackNIST800531Ready": {
-          "Fn::If": [
-            "loadNIST800531Cond",
-            {
-              "Ref": "PlaybookMemberStackNIST800531",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackNIST80053Ready": {
           "Fn::If": [
             "loadNIST80053Cond",
@@ -655,15 +613,6 @@ exports[`member stack snapshot matches 1`] = `
             "",
           ],
         },
-        "PlaybookMemberStackSC1Ready": {
-          "Fn::If": [
-            "loadSC1Cond",
-            {
-              "Ref": "PlaybookMemberStackSC1",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackSCReady": {
           "Fn::If": [
             "loadSCCond",
@@ -676,31 +625,8 @@ exports[`member stack snapshot matches 1`] = `
       },
       "Type": "AWS::CloudFormation::WaitConditionHandle",
     },
-    "NestedStackFactoryGatePlaybookMemberStackAFSBP137036A57": {
-      "Metadata": {
-        "PlaybookMemberStackAFSBPReady": {
-          "Fn::If": [
-            "loadAFSBPCond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP",
-            },
-            "",
-          ],
-        },
-      },
-      "Type": "AWS::CloudFormation::WaitConditionHandle",
-    },
     "NestedStackFactoryGatePlaybookMemberStackCIS120E08EFB8B": {
       "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackAFSBPReady": {
           "Fn::If": [
             "loadAFSBPCond",
@@ -715,15 +641,6 @@ exports[`member stack snapshot matches 1`] = `
     },
     "NestedStackFactoryGatePlaybookMemberStackCIS1402A4735A6": {
       "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackAFSBPReady": {
           "Fn::If": [
             "loadAFSBPCond",
@@ -747,15 +664,6 @@ exports[`member stack snapshot matches 1`] = `
     },
     "NestedStackFactoryGatePlaybookMemberStackCIS300FA804242": {
       "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackAFSBPReady": {
           "Fn::If": [
             "loadAFSBPCond",
@@ -779,15 +687,6 @@ exports[`member stack snapshot matches 1`] = `
             "loadCIS140Cond",
             {
               "Ref": "PlaybookMemberStackCIS140",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackNIST800531Ready": {
-          "Fn::If": [
-            "loadNIST800531Cond",
-            {
-              "Ref": "PlaybookMemberStackNIST800531",
             },
             "",
           ],
@@ -813,67 +712,8 @@ exports[`member stack snapshot matches 1`] = `
       },
       "Type": "AWS::CloudFormation::WaitConditionHandle",
     },
-    "NestedStackFactoryGatePlaybookMemberStackNIST8005311D6A30FD": {
-      "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackAFSBPReady": {
-          "Fn::If": [
-            "loadAFSBPCond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackCIS120Ready": {
-          "Fn::If": [
-            "loadCIS120Cond",
-            {
-              "Ref": "PlaybookMemberStackCIS120",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackCIS140Ready": {
-          "Fn::If": [
-            "loadCIS140Cond",
-            {
-              "Ref": "PlaybookMemberStackCIS140",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackNIST80053Ready": {
-          "Fn::If": [
-            "loadNIST80053Cond",
-            {
-              "Ref": "PlaybookMemberStackNIST80053",
-            },
-            "",
-          ],
-        },
-      },
-      "Type": "AWS::CloudFormation::WaitConditionHandle",
-    },
     "NestedStackFactoryGatePlaybookMemberStackNIST80053C3D22DE7": {
       "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackAFSBPReady": {
           "Fn::If": [
             "loadAFSBPCond",
@@ -906,15 +746,6 @@ exports[`member stack snapshot matches 1`] = `
     },
     "NestedStackFactoryGatePlaybookMemberStackPCI3214A12B906": {
       "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackAFSBPReady": {
           "Fn::If": [
             "loadAFSBPCond",
@@ -938,15 +769,6 @@ exports[`member stack snapshot matches 1`] = `
             "loadCIS140Cond",
             {
               "Ref": "PlaybookMemberStackCIS140",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackNIST800531Ready": {
-          "Fn::If": [
-            "loadNIST800531Cond",
-            {
-              "Ref": "PlaybookMemberStackNIST800531",
             },
             "",
           ],
@@ -965,15 +787,6 @@ exports[`member stack snapshot matches 1`] = `
     },
     "NestedStackFactoryGatePlaybookMemberStackSC0515DB36": {
       "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackAFSBPReady": {
           "Fn::If": [
             "loadAFSBPCond",
@@ -1010,15 +823,6 @@ exports[`member stack snapshot matches 1`] = `
             "",
           ],
         },
-        "PlaybookMemberStackNIST800531Ready": {
-          "Fn::If": [
-            "loadNIST800531Cond",
-            {
-              "Ref": "PlaybookMemberStackNIST800531",
-            },
-            "",
-          ],
-        },
         "PlaybookMemberStackNIST80053Ready": {
           "Fn::If": [
             "loadNIST80053Cond",
@@ -1033,92 +837,6 @@ exports[`member stack snapshot matches 1`] = `
             "loadPCI321Cond",
             {
               "Ref": "PlaybookMemberStackPCI321",
-            },
-            "",
-          ],
-        },
-      },
-      "Type": "AWS::CloudFormation::WaitConditionHandle",
-    },
-    "NestedStackFactoryGatePlaybookMemberStackSC1042EDDD9": {
-      "Metadata": {
-        "PlaybookMemberStackAFSBP1Ready": {
-          "Fn::If": [
-            "loadAFSBP1Cond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP1",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackAFSBPReady": {
-          "Fn::If": [
-            "loadAFSBPCond",
-            {
-              "Ref": "PlaybookMemberStackAFSBP",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackCIS120Ready": {
-          "Fn::If": [
-            "loadCIS120Cond",
-            {
-              "Ref": "PlaybookMemberStackCIS120",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackCIS140Ready": {
-          "Fn::If": [
-            "loadCIS140Cond",
-            {
-              "Ref": "PlaybookMemberStackCIS140",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackCIS300Ready": {
-          "Fn::If": [
-            "loadCIS300Cond",
-            {
-              "Ref": "PlaybookMemberStackCIS300",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackNIST800531Ready": {
-          "Fn::If": [
-            "loadNIST800531Cond",
-            {
-              "Ref": "PlaybookMemberStackNIST800531",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackNIST80053Ready": {
-          "Fn::If": [
-            "loadNIST80053Cond",
-            {
-              "Ref": "PlaybookMemberStackNIST80053",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackPCI321Ready": {
-          "Fn::If": [
-            "loadPCI321Cond",
-            {
-              "Ref": "PlaybookMemberStackPCI321",
-            },
-            "",
-          ],
-        },
-        "PlaybookMemberStackSCReady": {
-          "Fn::If": [
-            "loadSCCond",
-            {
-              "Ref": "PlaybookMemberStackSC",
             },
             "",
           ],
@@ -1168,56 +886,6 @@ exports[`member stack snapshot matches 1`] = `
                 ],
               },
               "/playbooks/AFSBPMemberStack.template",
-            ],
-          ],
-        },
-      },
-      "Type": "AWS::CloudFormation::Stack",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PlaybookMemberStackAFSBP1": {
-      "Condition": "loadAFSBP1Cond",
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "NestedStackFactoryGatePlaybookMemberStackAFSBP137036A57",
-        "RunbookStackNoRoles",
-      ],
-      "Properties": {
-        "Parameters": {
-          "Namespace": {
-            "Ref": "Namespace",
-          },
-          "SecHubAdminAccount": {
-            "Ref": "SecHubAdminAccount",
-          },
-          "WaitProviderServiceToken": {
-            "Fn::GetAtt": [
-              "WaitProviderFunction3D90ED36",
-              "Arn",
-            ],
-          },
-        },
-        "TemplateURL": {
-          "Fn::Join": [
-            "",
-            [
-              "https://",
-              {
-                "Fn::FindInMap": [
-                  "NestedStackFactorySourceCodeA11A36A7",
-                  "General",
-                  "S3Bucket",
-                ],
-              },
-              "-reference.s3.amazonaws.com/",
-              {
-                "Fn::FindInMap": [
-                  "NestedStackFactorySourceCodeA11A36A7",
-                  "General",
-                  "KeyPrefix",
-                ],
-              },
-              "/playbooks/AFSBPMemberStack1.template",
             ],
           ],
         },
@@ -1425,56 +1093,6 @@ exports[`member stack snapshot matches 1`] = `
       "Type": "AWS::CloudFormation::Stack",
       "UpdateReplacePolicy": "Delete",
     },
-    "PlaybookMemberStackNIST800531": {
-      "Condition": "loadNIST800531Cond",
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "NestedStackFactoryGatePlaybookMemberStackNIST8005311D6A30FD",
-        "RunbookStackNoRoles",
-      ],
-      "Properties": {
-        "Parameters": {
-          "Namespace": {
-            "Ref": "Namespace",
-          },
-          "SecHubAdminAccount": {
-            "Ref": "SecHubAdminAccount",
-          },
-          "WaitProviderServiceToken": {
-            "Fn::GetAtt": [
-              "WaitProviderFunction3D90ED36",
-              "Arn",
-            ],
-          },
-        },
-        "TemplateURL": {
-          "Fn::Join": [
-            "",
-            [
-              "https://",
-              {
-                "Fn::FindInMap": [
-                  "NestedStackFactorySourceCodeA11A36A7",
-                  "General",
-                  "S3Bucket",
-                ],
-              },
-              "-reference.s3.amazonaws.com/",
-              {
-                "Fn::FindInMap": [
-                  "NestedStackFactorySourceCodeA11A36A7",
-                  "General",
-                  "KeyPrefix",
-                ],
-              },
-              "/playbooks/NIST80053MemberStack1.template",
-            ],
-          ],
-        },
-      },
-      "Type": "AWS::CloudFormation::Stack",
-      "UpdateReplacePolicy": "Delete",
-    },
     "PlaybookMemberStackPCI321": {
       "Condition": "loadPCI321Cond",
       "DeletionPolicy": "Delete",
@@ -1568,56 +1186,6 @@ exports[`member stack snapshot matches 1`] = `
                 ],
               },
               "/playbooks/SCMemberStack.template",
-            ],
-          ],
-        },
-      },
-      "Type": "AWS::CloudFormation::Stack",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PlaybookMemberStackSC1": {
-      "Condition": "loadSC1Cond",
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "NestedStackFactoryGatePlaybookMemberStackSC1042EDDD9",
-        "RunbookStackNoRoles",
-      ],
-      "Properties": {
-        "Parameters": {
-          "Namespace": {
-            "Ref": "Namespace",
-          },
-          "SecHubAdminAccount": {
-            "Ref": "SecHubAdminAccount",
-          },
-          "WaitProviderServiceToken": {
-            "Fn::GetAtt": [
-              "WaitProviderFunction3D90ED36",
-              "Arn",
-            ],
-          },
-        },
-        "TemplateURL": {
-          "Fn::Join": [
-            "",
-            [
-              "https://",
-              {
-                "Fn::FindInMap": [
-                  "NestedStackFactorySourceCodeA11A36A7",
-                  "General",
-                  "S3Bucket",
-                ],
-              },
-              "-reference.s3.amazonaws.com/",
-              {
-                "Fn::FindInMap": [
-                  "NestedStackFactorySourceCodeA11A36A7",
-                  "General",
-                  "KeyPrefix",
-                ],
-              },
-              "/playbooks/SCMemberStack1.template",
             ],
           ],
         },

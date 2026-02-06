@@ -1,0 +1,28 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { Construct } from 'constructs';
+import { ControlRunbookDocument, ControlRunbookProps, RemediationScope } from './control_runbook';
+import { PlaybookProps } from '../lib/control_runbooks-construct';
+import { HardCodedString } from '@cdklabs/cdk-ssm-documents';
+
+export function createControlRunbook(scope: Construct, id: string, props: PlaybookProps): ControlRunbookDocument {
+  return new EnableWAFLoggingDocument(scope, id, { ...props, controlId: 'WAF.11' });
+}
+
+export class EnableWAFLoggingDocument extends ControlRunbookDocument {
+  constructor(scope: Construct, id: string, props: ControlRunbookProps) {
+    super(scope, id, {
+      ...props,
+      securityControlId: 'WAF.11',
+      remediationName: 'EnableWAFLogging',
+      scope: RemediationScope.REGIONAL,
+      resourceIdName: 'WebAclArn',
+      updateDescription: HardCodedString.of('Logging enabled on WAF Web ACL.'),
+    });
+  }
+
+  protected override getRemediationParams(): Record<string, any> {
+    const params = super.getRemediationParams();
+    return params;
+  }
+}

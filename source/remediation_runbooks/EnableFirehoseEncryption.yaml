@@ -1,0 +1,55 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-EnableFirehoseEncryption
+
+  ## What does this document do?
+    This document enables server-side encryption on a Kinesis Data Firehose delivery stream using
+    [UpdateDestination](https://docs.aws.amazon.com/firehose/latest/APIReference/API_UpdateDestination.html) API.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * DeliveryStreamName: (Required) The name of the Firehose delivery stream.
+  * KeyType: (Optional) The type of encryption key. Default is AWS_OWNED_CMK.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: DataFirehose.1
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  DeliveryStreamName:
+    type: String
+    description: (Required) The name of the Firehose delivery stream.
+    allowedPattern: '^[a-zA-Z0-9_.-]{1,64}$'
+  KeyType:
+    type: String
+    description: (Optional) The type of encryption key. Default is AWS_OWNED_CMK.
+    default: 'AWS_OWNED_CMK'
+    allowedValues:
+      - 'AWS_OWNED_CMK'
+      - 'CUSTOMER_MANAGED_CMK'
+
+outputs:
+  - EnableFirehoseEncryption.Output
+mainSteps:
+- name: 'EnableFirehoseEncryption'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      delivery_stream_name: '{{ DeliveryStreamName }}'
+      key_type: '{{ KeyType }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=enable_firehose_encryption.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

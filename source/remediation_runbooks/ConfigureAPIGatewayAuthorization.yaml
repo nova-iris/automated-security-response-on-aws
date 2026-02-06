@@ -1,0 +1,56 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-ConfigureAPIGatewayAuthorization
+
+  ## What does this document do?
+    This document configures authorization on API Gateway routes using
+    [UpdateRoute](https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-routes-routeid.html) API.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * ApiId: (Required) The API identifier.
+  * AuthorizationType: (Optional) The authorization type. Default is AWS_IAM.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: APIGateway.8
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  ApiId:
+    type: String
+    description: (Required) The API identifier.
+    allowedPattern: '^[a-z0-9]{10}$'
+  AuthorizationType:
+    type: String
+    description: (Optional) The authorization type. Default is AWS_IAM.
+    default: 'AWS_IAM'
+    allowedValues:
+      - 'AWS_IAM'
+      - 'JWT'
+      - 'CUSTOM'
+
+outputs:
+  - ConfigureAPIGatewayAuthorization.Output
+mainSteps:
+- name: 'ConfigureAPIGatewayAuthorization'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      api_id: '{{ ApiId }}'
+      authorization_type: '{{ AuthorizationType }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=configure_apigateway_authorization.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

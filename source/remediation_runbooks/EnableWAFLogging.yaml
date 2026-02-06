@@ -1,0 +1,53 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-EnableWAFLogging
+
+  ## What does this document do?
+    This document enables logging on a WAF Web ACL using
+    [PutLoggingConfiguration](https://docs.aws.amazon.com/waf/latest/APIReference/API_PutLoggingConfiguration.html) API.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * WebAclArn: (Required) The ARN of the WAF Web ACL.
+  * LogDestinationConfigs: (Optional) The ARN of the logging destination. If not provided, creates CloudWatch log group.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: WAF.11
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  WebAclArn:
+    type: String
+    description: (Required) The ARN of the WAF Web ACL.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):wafv2:[a-z0-9-]+:\d{12}:(?:regional|global)/webacl/[a-zA-Z0-9_-]+/[a-f0-9-]+$'
+  LogDestinationConfigs:
+    type: String
+    description: (Optional) The ARN of the logging destination (CloudWatch log group, S3 bucket, or Firehose).
+    default: ''
+    allowedPattern: '^$|^arn:(?:aws|aws-us-gov|aws-cn):[a-z0-9-]+:[a-z0-9-]*:\d{12}:.+$'
+
+outputs:
+  - EnableWAFLogging.Output
+mainSteps:
+- name: 'EnableWAFLogging'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      web_acl_arn: '{{ WebAclArn }}'
+      log_destination_configs: '{{ LogDestinationConfigs }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=enable_waf_logging.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

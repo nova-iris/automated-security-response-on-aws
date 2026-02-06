@@ -404,6 +404,7 @@ export function getRegexRegistry(): RegexRegistry {
   addElastiCacheClusterTestCases(registry);
   addECSTaskDefinitionTestCases(registry);
   addELBArnTestCases(registry);
+  addCustomRemediationTestCases(registry);
 
   return registry;
 }
@@ -1030,4 +1031,143 @@ function addELBArnTestCases(registry: RegexRegistry) {
     ],
   );
   registry.addCase(elbArnTestCases);
+}
+
+function addCustomRemediationTestCases(registry: RegexRegistry) {
+  // S3 Bucket Name (used by EnableS3CrossRegionReplication, EnableS3ObjectLock, EnableS3MFADelete)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$`,
+      'S3 Bucket Name',
+      ['my-test-bucket', 'a0bucket0name'],
+      ['My-Bucket', '-invalid', 'ab'],
+    ),
+  );
+
+  // S3 Bucket ARN with name capture (used by EnableS3CrossRegionReplication)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^arn:(?:aws|aws-us-gov|aws-cn):s3:::[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$`,
+      'S3 Bucket ARN',
+      ['arn:aws:s3:::my-test-bucket', 'arn:aws-cn:s3:::another-bucket-1'],
+      ['arn:aws:s3:::My-Bucket', 'arn:aws:s3:::ab'],
+    ),
+  );
+
+  // RDS Cluster/Instance Identifier (used by EnableRDSClusterIAMAuthentication, ChangeRDSInstancePort)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^[a-zA-Z][a-zA-Z0-9-]{0,62}$`,
+      'RDS Cluster or Instance Identifier',
+      ['mydb', 'my-cluster-1', 'A'],
+      ['-invalid', '1startswithnumber', ''],
+    ),
+  );
+
+  // Lambda Function Name without backslash escape (used by ConfigureLambdaDLQ, ConfigureLambdaVPC, UpdateLambdaRuntime)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^[a-zA-Z0-9-_]{1,64}$`,
+      'Lambda Function Name (custom)',
+      ['my-function', 'test_func_123'],
+      ['', 'func with spaces'],
+    ),
+  );
+
+  // API Gateway REST API ID (used by ConfigureAPIGatewayAuthorization, EnableAPIGatewayAccessLogging)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^[a-z0-9]{10}$`,
+      'API Gateway REST API ID',
+      ['abc1234567', 'a0b1c2d3e4'],
+      ['ABC1234567', 'short', 'toolongvalue1'],
+    ),
+  );
+
+  // General alphanumeric with dash and underscore (used by EnableAPIGatewayAccessLogging for stage name)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^[a-zA-Z0-9_-]+$`,
+      'Alphanumeric with dash and underscore',
+      ['my-stage', 'prod_v1', 'test123'],
+      ['has spaces', 'special!char'],
+    ),
+  );
+
+  // Firehose Delivery Stream Name (used by EnableFirehoseEncryption)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^[a-zA-Z0-9_.-]{1,64}$`,
+      'Firehose Delivery Stream Name',
+      ['my-stream', 'stream.name_1'],
+      ['', 'stream with spaces'],
+    ),
+  );
+
+  // WAF Web ACL ARN (used by EnableWAFLogging)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^arn:(?:aws|aws-us-gov|aws-cn):wafv2:[a-z0-9-]+:\d{12}:(?:regional|global)/webacl/[a-zA-Z0-9_-]+/[a-f0-9-]+$`,
+      'WAF Web ACL ARN',
+      [
+        'arn:aws:wafv2:us-east-1:123456789012:regional/webacl/my-web-acl/a1b2c3d4-5678-90ab-cdef-111111111111',
+        'arn:aws:wafv2:us-east-1:123456789012:global/webacl/my-acl/a1b2c3d4-5678-90ab-cdef-000000000000',
+      ],
+      ['arn:aws:wafv2:us-east-1:123456789012:regional/webacl/', 'not-an-arn'],
+    ),
+  );
+
+  // IAM User Name (used by RemoveIAMUserDirectPolicies, EnableIAMUserMFA)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^[\w+=,.@-]{1,64}$`,
+      'IAM User Name (custom)',
+      ['admin-user', 'test@example.com', 'user_name.test'],
+      ['', 'a'.repeat(65)],
+    ),
+  );
+
+  // IAM Principal ARN (used by RemoveKMSInlinePolicies)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:(user|role|group)/[\w+=,.@/-]+$`,
+      'IAM Principal ARN (user, role, or group)',
+      [
+        'arn:aws:iam::123456789012:user/admin',
+        'arn:aws:iam::123456789012:role/MyRole',
+        'arn:aws:iam::123456789012:group/Admins',
+      ],
+      ['arn:aws:iam::123456789012:policy/MyPolicy', 'not-an-arn'],
+    ),
+  );
+
+  // DLQ Target ARN - SQS or SNS (used by ConfigureLambdaDLQ)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^$|^arn:(?:aws|aws-us-gov|aws-cn):(sqs|sns):[a-z0-9-]+:\d{12}:[a-zA-Z0-9_-]+$`,
+      'DLQ Target ARN (SQS or SNS, optional)',
+      ['', 'arn:aws:sqs:us-east-1:123456789012:my-queue', 'arn:aws:sns:us-west-2:123456789012:my-topic'],
+      ['arn:aws:s3:::my-bucket', 'invalid-arn'],
+    ),
+  );
+
+  // CloudWatch Log Group ARN (used by EnableAPIGatewayAccessLogging)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^$|^arn:(?:aws|aws-us-gov|aws-cn):logs:[a-z0-9-]+:\d{12}:log-group:[a-zA-Z0-9/_.-]+$`,
+      'CloudWatch Log Group ARN (optional)',
+      ['', 'arn:aws:logs:us-east-1:123456789012:log-group:/aws/apigateway/my-api'],
+      ['arn:aws:s3:::my-bucket'],
+    ),
+  );
+
+  // WAF Log Destination ARN (used by EnableWAFLogging)
+  registry.addCase(
+    new RegexTestCase(
+      String.raw`^$|^arn:(?:aws|aws-us-gov|aws-cn):[a-z0-9-]+:[a-z0-9-]*:\d{12}:.+$`,
+      'WAF Log Destination ARN (optional)',
+      ['', 'arn:aws:logs:us-east-1:123456789012:log-group:aws-waf-logs-test'],
+      ['invalid-arn'],
+    ),
+  );
 }

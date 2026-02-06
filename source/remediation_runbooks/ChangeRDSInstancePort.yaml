@@ -1,0 +1,54 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-ChangeRDSInstancePort
+
+  ## What does this document do?
+    This document provides information about changing the RDS database port.
+    Note: Changing the port requires application updates and causes downtime.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * DBInstanceIdentifier: (Required) The identifier of the RDS DB instance.
+  * NewPort: (Required) The new port number for the database.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: RDS.23
+
+  ## Note
+  This control requires manual intervention due to application dependencies.
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  DBInstanceIdentifier:
+    type: String
+    description: (Required) The identifier of the RDS DB instance.
+    allowedPattern: '^[a-zA-Z][a-zA-Z0-9-]{0,62}$'
+  NewPort:
+    type: Integer
+    description: (Required) The new port number for the database.
+
+outputs:
+  - ChangeRDSInstancePort.Output
+mainSteps:
+- name: 'ChangeRDSInstancePort'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      db_instance_identifier: '{{ DBInstanceIdentifier }}'
+      new_port: '{{ NewPort }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=change_rds_instance_port.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'

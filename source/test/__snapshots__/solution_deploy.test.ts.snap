@@ -602,6 +602,166 @@ exports[`Test if the Stack has all the resources. 1`] = `
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "APIGateway8remediationfailure2EF68345": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for APIGateway.8 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-APIGateway.8-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1APIGateway8 / (m1APIGateway8+m2APIGateway8)) * 100",
+            "Id": "expr_1",
+            "Label": "APIGateway.8 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1APIGateway8",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "APIGateway.8",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2APIGateway8",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "APIGateway.8",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "APIGateway9remediationfailureB7EE163A": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for APIGateway.9 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-APIGateway.9-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1APIGateway9 / (m1APIGateway9+m2APIGateway9)) * 100",
+            "Id": "expr_1",
+            "Label": "APIGateway.9 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1APIGateway9",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "APIGateway.9",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2APIGateway9",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "APIGateway.9",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "ASRAccountFilterModeAD66BC2C": {
       "Properties": {
         "AllowedPattern": "^(Include|Exclude|Disabled)$",
@@ -4244,6 +4404,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
+    "DataFirehose1remediationfailureE49F0A38": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for DataFirehose.1 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-DataFirehose.1-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1DataFirehose1 / (m1DataFirehose1+m2DataFirehose1)) * 100",
+            "Id": "expr_1",
+            "Label": "DataFirehose.1 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1DataFirehose1",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "DataFirehose.1",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2DataFirehose1",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "DataFirehose.1",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "DynamoDB1remediationfailureC2826724": {
       "Condition": "enhancedAlarmsEnabled",
       "Metadata": {
@@ -5262,6 +5502,166 @@ exports[`Test if the Stack has all the resources. 1`] = `
                   {
                     "Name": "ControlId",
                     "Value": "EC2.4",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EC258remediationfailure85196C12": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for EC2.58 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-EC2.58-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1EC258 / (m1EC258+m2EC258)) * 100",
+            "Id": "expr_1",
+            "Label": "EC2.58 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1EC258",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "EC2.58",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2EC258",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "EC2.58",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EC260remediationfailure2692FC48": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for EC2.60 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-EC2.60-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1EC260 / (m1EC260+m2EC260)) * 100",
+            "Id": "expr_1",
+            "Label": "EC2.60 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1EC260",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "EC2.60",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2EC260",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "EC2.60",
                   },
                   {
                     "Name": "Outcome",
@@ -7181,6 +7581,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "IAM19remediationfailure7030D336": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for IAM.19 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-IAM.19-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1IAM19 / (m1IAM19+m2IAM19)) * 100",
+            "Id": "expr_1",
+            "Label": "IAM.19 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1IAM19",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "IAM.19",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2IAM19",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "IAM.19",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "IAM22remediationfailure81BDDC78": {
       "Condition": "enhancedAlarmsEnabled",
       "Metadata": {
@@ -7239,6 +7719,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
                   {
                     "Name": "ControlId",
                     "Value": "IAM.22",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "IAM2remediationfailure3E4F0CB6": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for IAM.2 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-IAM.2-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1IAM2 / (m1IAM2+m2IAM2)) * 100",
+            "Id": "expr_1",
+            "Label": "IAM.2 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1IAM2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "IAM.2",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2IAM2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "IAM.2",
                   },
                   {
                     "Name": "Outcome",
@@ -7519,6 +8079,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
     },
+    "KMS2remediationfailure86E24020": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for KMS.2 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-KMS.2-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1KMS2 / (m1KMS2+m2KMS2)) * 100",
+            "Id": "expr_1",
+            "Label": "KMS.2 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1KMS2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "KMS.2",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2KMS2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "KMS.2",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "KMS4remediationfailure02F98C5F": {
       "Condition": "enhancedAlarmsEnabled",
       "Metadata": {
@@ -7657,6 +8297,246 @@ exports[`Test if the Stack has all the resources. 1`] = `
                   {
                     "Name": "ControlId",
                     "Value": "Lambda.1",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Lambda2remediationfailureC36FED4B": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for Lambda.2 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-Lambda.2-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1Lambda2 / (m1Lambda2+m2Lambda2)) * 100",
+            "Id": "expr_1",
+            "Label": "Lambda.2 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1Lambda2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "Lambda.2",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2Lambda2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "Lambda.2",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Lambda3remediationfailureBD77EBE7": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for Lambda.3 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-Lambda.3-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1Lambda3 / (m1Lambda3+m2Lambda3)) * 100",
+            "Id": "expr_1",
+            "Label": "Lambda.3 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1Lambda3",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "Lambda.3",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2Lambda3",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "Lambda.3",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Lambda7remediationfailure78E88039": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for Lambda.7 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-Lambda.7-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1Lambda7 / (m1Lambda7+m2Lambda7)) * 100",
+            "Id": "expr_1",
+            "Label": "Lambda.7 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1Lambda7",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "Lambda.7",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2Lambda7",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "Lambda.7",
                   },
                   {
                     "Name": "Outcome",
@@ -8739,6 +9619,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "RDS12remediationfailure194FD398": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for RDS.12 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-RDS.12-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1RDS12 / (m1RDS12+m2RDS12)) * 100",
+            "Id": "expr_1",
+            "Label": "RDS.12 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1RDS12",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "RDS.12",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2RDS12",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "RDS.12",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "RDS13remediationfailure15C4FA2F": {
       "Condition": "enhancedAlarmsEnabled",
       "Metadata": {
@@ -8957,6 +9917,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
                   {
                     "Name": "ControlId",
                     "Value": "RDS.1",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "RDS23remediationfailure43B19D10": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for RDS.23 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-RDS.23-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1RDS23 / (m1RDS23+m2RDS23)) * 100",
+            "Id": "expr_1",
+            "Label": "RDS.23 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1RDS23",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "RDS.23",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2RDS23",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "RDS.23",
                   },
                   {
                     "Name": "Outcome",
@@ -10197,7 +11237,7 @@ exports[`Test if the Stack has all the resources. 1`] = `
               {
                 "Ref": "AWS::Region",
               },
-              "","metrics":[[{"label":"AutoScaling.1 Failure Percentage","expression":"(m1AutoScaling1 / (m1AutoScaling1+m2AutoScaling1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","AutoScaling.1","Outcome","FAILED",{"id":"m1AutoScaling1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","AutoScaling.1","Outcome","SUCCESS",{"id":"m2AutoScaling1","visible":false,"period":86400}],[{"label":"CloudFormation.1 Failure Percentage","expression":"(m1CloudFormation1 / (m1CloudFormation1+m2CloudFormation1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudFormation.1","Outcome","FAILED",{"id":"m1CloudFormation1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudFormation.1","Outcome","SUCCESS",{"id":"m2CloudFormation1","visible":false,"period":86400}],[{"label":"CloudFront.1 Failure Percentage","expression":"(m1CloudFront1 / (m1CloudFront1+m2CloudFront1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudFront.1","Outcome","FAILED",{"id":"m1CloudFront1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudFront.1","Outcome","SUCCESS",{"id":"m2CloudFront1","visible":false,"period":86400}],[{"label":"CloudFront.12 Failure Percentage","expression":"(m1CloudFront12 / (m1CloudFront12+m2CloudFront12)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudFront.12","Outcome","FAILED",{"id":"m1CloudFront12","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudFront.12","Outcome","SUCCESS",{"id":"m2CloudFront12","visible":false,"period":86400}],[{"label":"CloudTrail.1 Failure Percentage","expression":"(m1CloudTrail1 / (m1CloudTrail1+m2CloudTrail1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.1","Outcome","FAILED",{"id":"m1CloudTrail1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.1","Outcome","SUCCESS",{"id":"m2CloudTrail1","visible":false,"period":86400}],[{"label":"CloudTrail.2 Failure Percentage","expression":"(m1CloudTrail2 / (m1CloudTrail2+m2CloudTrail2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.2","Outcome","FAILED",{"id":"m1CloudTrail2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.2","Outcome","SUCCESS",{"id":"m2CloudTrail2","visible":false,"period":86400}],[{"label":"CloudTrail.3 Failure Percentage","expression":"(m1CloudTrail3 / (m1CloudTrail3+m2CloudTrail3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.3","Outcome","FAILED",{"id":"m1CloudTrail3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.3","Outcome","SUCCESS",{"id":"m2CloudTrail3","visible":false,"period":86400}],[{"label":"CloudTrail.4 Failure Percentage","expression":"(m1CloudTrail4 / (m1CloudTrail4+m2CloudTrail4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.4","Outcome","FAILED",{"id":"m1CloudTrail4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.4","Outcome","SUCCESS",{"id":"m2CloudTrail4","visible":false,"period":86400}],[{"label":"CloudTrail.5 Failure Percentage","expression":"(m1CloudTrail5 / (m1CloudTrail5+m2CloudTrail5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.5","Outcome","FAILED",{"id":"m1CloudTrail5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.5","Outcome","SUCCESS",{"id":"m2CloudTrail5","visible":false,"period":86400}],[{"label":"CloudTrail.6 Failure Percentage","expression":"(m1CloudTrail6 / (m1CloudTrail6+m2CloudTrail6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.6","Outcome","FAILED",{"id":"m1CloudTrail6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.6","Outcome","SUCCESS",{"id":"m2CloudTrail6","visible":false,"period":86400}],[{"label":"CloudTrail.7 Failure Percentage","expression":"(m1CloudTrail7 / (m1CloudTrail7+m2CloudTrail7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.7","Outcome","FAILED",{"id":"m1CloudTrail7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.7","Outcome","SUCCESS",{"id":"m2CloudTrail7","visible":false,"period":86400}],[{"label":"CloudWatch.1 Failure Percentage","expression":"(m1CloudWatch1 / (m1CloudWatch1+m2CloudWatch1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.1","Outcome","FAILED",{"id":"m1CloudWatch1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.1","Outcome","SUCCESS",{"id":"m2CloudWatch1","visible":false,"period":86400}],[{"label":"CloudWatch.2 Failure Percentage","expression":"(m1CloudWatch2 / (m1CloudWatch2+m2CloudWatch2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.2","Outcome","FAILED",{"id":"m1CloudWatch2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.2","Outcome","SUCCESS",{"id":"m2CloudWatch2","visible":false,"period":86400}],[{"label":"CloudWatch.3 Failure Percentage","expression":"(m1CloudWatch3 / (m1CloudWatch3+m2CloudWatch3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.3","Outcome","FAILED",{"id":"m1CloudWatch3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.3","Outcome","SUCCESS",{"id":"m2CloudWatch3","visible":false,"period":86400}],[{"label":"CloudWatch.4 Failure Percentage","expression":"(m1CloudWatch4 / (m1CloudWatch4+m2CloudWatch4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.4","Outcome","FAILED",{"id":"m1CloudWatch4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.4","Outcome","SUCCESS",{"id":"m2CloudWatch4","visible":false,"period":86400}],[{"label":"CloudWatch.5 Failure Percentage","expression":"(m1CloudWatch5 / (m1CloudWatch5+m2CloudWatch5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.5","Outcome","FAILED",{"id":"m1CloudWatch5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.5","Outcome","SUCCESS",{"id":"m2CloudWatch5","visible":false,"period":86400}],[{"label":"CloudWatch.6 Failure Percentage","expression":"(m1CloudWatch6 / (m1CloudWatch6+m2CloudWatch6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.6","Outcome","FAILED",{"id":"m1CloudWatch6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.6","Outcome","SUCCESS",{"id":"m2CloudWatch6","visible":false,"period":86400}],[{"label":"CloudWatch.7 Failure Percentage","expression":"(m1CloudWatch7 / (m1CloudWatch7+m2CloudWatch7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.7","Outcome","FAILED",{"id":"m1CloudWatch7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.7","Outcome","SUCCESS",{"id":"m2CloudWatch7","visible":false,"period":86400}],[{"label":"CloudWatch.8 Failure Percentage","expression":"(m1CloudWatch8 / (m1CloudWatch8+m2CloudWatch8)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.8","Outcome","FAILED",{"id":"m1CloudWatch8","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.8","Outcome","SUCCESS",{"id":"m2CloudWatch8","visible":false,"period":86400}],[{"label":"CloudWatch.9 Failure Percentage","expression":"(m1CloudWatch9 / (m1CloudWatch9+m2CloudWatch9)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.9","Outcome","FAILED",{"id":"m1CloudWatch9","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.9","Outcome","SUCCESS",{"id":"m2CloudWatch9","visible":false,"period":86400}],[{"label":"CloudWatch.10 Failure Percentage","expression":"(m1CloudWatch10 / (m1CloudWatch10+m2CloudWatch10)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.10","Outcome","FAILED",{"id":"m1CloudWatch10","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.10","Outcome","SUCCESS",{"id":"m2CloudWatch10","visible":false,"period":86400}],[{"label":"CloudWatch.11 Failure Percentage","expression":"(m1CloudWatch11 / (m1CloudWatch11+m2CloudWatch11)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.11","Outcome","FAILED",{"id":"m1CloudWatch11","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.11","Outcome","SUCCESS",{"id":"m2CloudWatch11","visible":false,"period":86400}],[{"label":"CloudWatch.12 Failure Percentage","expression":"(m1CloudWatch12 / (m1CloudWatch12+m2CloudWatch12)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.12","Outcome","FAILED",{"id":"m1CloudWatch12","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.12","Outcome","SUCCESS",{"id":"m2CloudWatch12","visible":false,"period":86400}],[{"label":"CloudWatch.13 Failure Percentage","expression":"(m1CloudWatch13 / (m1CloudWatch13+m2CloudWatch13)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.13","Outcome","FAILED",{"id":"m1CloudWatch13","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.13","Outcome","SUCCESS",{"id":"m2CloudWatch13","visible":false,"period":86400}],[{"label":"CloudWatch.14 Failure Percentage","expression":"(m1CloudWatch14 / (m1CloudWatch14+m2CloudWatch14)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.14","Outcome","FAILED",{"id":"m1CloudWatch14","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.14","Outcome","SUCCESS",{"id":"m2CloudWatch14","visible":false,"period":86400}],[{"label":"CodeBuild.2 Failure Percentage","expression":"(m1CodeBuild2 / (m1CodeBuild2+m2CodeBuild2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CodeBuild.2","Outcome","FAILED",{"id":"m1CodeBuild2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CodeBuild.2","Outcome","SUCCESS",{"id":"m2CodeBuild2","visible":false,"period":86400}],[{"label":"CodeBuild.5 Failure Percentage","expression":"(m1CodeBuild5 / (m1CodeBuild5+m2CodeBuild5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CodeBuild.5","Outcome","FAILED",{"id":"m1CodeBuild5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CodeBuild.5","Outcome","SUCCESS",{"id":"m2CodeBuild5","visible":false,"period":86400}],[{"label":"Config.1 Failure Percentage","expression":"(m1Config1 / (m1Config1+m2Config1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Config.1","Outcome","FAILED",{"id":"m1Config1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Config.1","Outcome","SUCCESS",{"id":"m2Config1","visible":false,"period":86400}],[{"label":"EC2.1 Failure Percentage","expression":"(m1EC21 / (m1EC21+m2EC21)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.1","Outcome","FAILED",{"id":"m1EC21","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.1","Outcome","SUCCESS",{"id":"m2EC21","visible":false,"period":86400}],[{"label":"EC2.2 Failure Percentage","expression":"(m1EC22 / (m1EC22+m2EC22)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.2","Outcome","FAILED",{"id":"m1EC22","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.2","Outcome","SUCCESS",{"id":"m2EC22","visible":false,"period":86400}],[{"label":"EC2.4 Failure Percentage","expression":"(m1EC24 / (m1EC24+m2EC24)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.4","Outcome","FAILED",{"id":"m1EC24","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.4","Outcome","SUCCESS",{"id":"m2EC24","visible":false,"period":86400}],[{"label":"EC2.6 Failure Percentage","expression":"(m1EC26 / (m1EC26+m2EC26)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.6","Outcome","FAILED",{"id":"m1EC26","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.6","Outcome","SUCCESS",{"id":"m2EC26","visible":false,"period":86400}],[{"label":"EC2.7 Failure Percentage","expression":"(m1EC27 / (m1EC27+m2EC27)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.7","Outcome","FAILED",{"id":"m1EC27","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.7","Outcome","SUCCESS",{"id":"m2EC27","visible":false,"period":86400}],[{"label":"EC2.8 Failure Percentage","expression":"(m1EC28 / (m1EC28+m2EC28)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.8","Outcome","FAILED",{"id":"m1EC28","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.8","Outcome","SUCCESS",{"id":"m2EC28","visible":false,"period":86400}],[{"label":"EC2.13 Failure Percentage","expression":"(m1EC213 / (m1EC213+m2EC213)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.13","Outcome","FAILED",{"id":"m1EC213","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.13","Outcome","SUCCESS",{"id":"m2EC213","visible":false,"period":86400}],[{"label":"EC2.14 Failure Percentage","expression":"(m1EC214 / (m1EC214+m2EC214)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.14","Outcome","FAILED",{"id":"m1EC214","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.14","Outcome","SUCCESS",{"id":"m2EC214","visible":false,"period":86400}],[{"label":"EC2.15 Failure Percentage","expression":"(m1EC215 / (m1EC215+m2EC215)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.15","Outcome","FAILED",{"id":"m1EC215","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.15","Outcome","SUCCESS",{"id":"m2EC215","visible":false,"period":86400}],[{"label":"EC2.18 Failure Percentage","expression":"(m1EC218 / (m1EC218+m2EC218)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.18","Outcome","FAILED",{"id":"m1EC218","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.18","Outcome","SUCCESS",{"id":"m2EC218","visible":false,"period":86400}],[{"label":"EC2.19 Failure Percentage","expression":"(m1EC219 / (m1EC219+m2EC219)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.19","Outcome","FAILED",{"id":"m1EC219","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.19","Outcome","SUCCESS",{"id":"m2EC219","visible":false,"period":86400}],[{"label":"EC2.23 Failure Percentage","expression":"(m1EC223 / (m1EC223+m2EC223)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.23","Outcome","FAILED",{"id":"m1EC223","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.23","Outcome","SUCCESS",{"id":"m2EC223","visible":false,"period":86400}],[{"label":"IAM.3 Failure Percentage","expression":"(m1IAM3 / (m1IAM3+m2IAM3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.3","Outcome","FAILED",{"id":"m1IAM3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.3","Outcome","SUCCESS",{"id":"m2IAM3","visible":false,"period":86400}],[{"label":"IAM.7 Failure Percentage","expression":"(m1IAM7 / (m1IAM7+m2IAM7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.7","Outcome","FAILED",{"id":"m1IAM7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.7","Outcome","SUCCESS",{"id":"m2IAM7","visible":false,"period":86400}],[{"label":"IAM.8 Failure Percentage","expression":"(m1IAM8 / (m1IAM8+m2IAM8)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.8","Outcome","FAILED",{"id":"m1IAM8","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.8","Outcome","SUCCESS",{"id":"m2IAM8","visible":false,"period":86400}],[{"label":"IAM.11 Failure Percentage","expression":"(m1IAM11 / (m1IAM11+m2IAM11)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.11","Outcome","FAILED",{"id":"m1IAM11","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.11","Outcome","SUCCESS",{"id":"m2IAM11","visible":false,"period":86400}],[{"label":"IAM.12 Failure Percentage","expression":"(m1IAM12 / (m1IAM12+m2IAM12)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.12","Outcome","FAILED",{"id":"m1IAM12","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.12","Outcome","SUCCESS",{"id":"m2IAM12","visible":false,"period":86400}],[{"label":"IAM.13 Failure Percentage","expression":"(m1IAM13 / (m1IAM13+m2IAM13)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.13","Outcome","FAILED",{"id":"m1IAM13","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.13","Outcome","SUCCESS",{"id":"m2IAM13","visible":false,"period":86400}],[{"label":"IAM.14 Failure Percentage","expression":"(m1IAM14 / (m1IAM14+m2IAM14)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.14","Outcome","FAILED",{"id":"m1IAM14","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.14","Outcome","SUCCESS",{"id":"m2IAM14","visible":false,"period":86400}],[{"label":"IAM.15 Failure Percentage","expression":"(m1IAM15 / (m1IAM15+m2IAM15)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.15","Outcome","FAILED",{"id":"m1IAM15","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.15","Outcome","SUCCESS",{"id":"m2IAM15","visible":false,"period":86400}],[{"label":"IAM.16 Failure Percentage","expression":"(m1IAM16 / (m1IAM16+m2IAM16)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.16","Outcome","FAILED",{"id":"m1IAM16","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.16","Outcome","SUCCESS",{"id":"m2IAM16","visible":false,"period":86400}],[{"label":"IAM.17 Failure Percentage","expression":"(m1IAM17 / (m1IAM17+m2IAM17)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.17","Outcome","FAILED",{"id":"m1IAM17","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.17","Outcome","SUCCESS",{"id":"m2IAM17","visible":false,"period":86400}],[{"label":"IAM.18 Failure Percentage","expression":"(m1IAM18 / (m1IAM18+m2IAM18)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.18","Outcome","FAILED",{"id":"m1IAM18","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.18","Outcome","SUCCESS",{"id":"m2IAM18","visible":false,"period":86400}],[{"label":"IAM.22 Failure Percentage","expression":"(m1IAM22 / (m1IAM22+m2IAM22)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.22","Outcome","FAILED",{"id":"m1IAM22","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.22","Outcome","SUCCESS",{"id":"m2IAM22","visible":false,"period":86400}],[{"label":"KMS.4 Failure Percentage","expression":"(m1KMS4 / (m1KMS4+m2KMS4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","KMS.4","Outcome","FAILED",{"id":"m1KMS4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","KMS.4","Outcome","SUCCESS",{"id":"m2KMS4","visible":false,"period":86400}],[{"label":"Lambda.1 Failure Percentage","expression":"(m1Lambda1 / (m1Lambda1+m2Lambda1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.1","Outcome","FAILED",{"id":"m1Lambda1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.1","Outcome","SUCCESS",{"id":"m2Lambda1","visible":false,"period":86400}],[{"label":"RDS.1 Failure Percentage","expression":"(m1RDS1 / (m1RDS1+m2RDS1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.1","Outcome","FAILED",{"id":"m1RDS1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.1","Outcome","SUCCESS",{"id":"m2RDS1","visible":false,"period":86400}],[{"label":"RDS.2 Failure Percentage","expression":"(m1RDS2 / (m1RDS2+m2RDS2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.2","Outcome","FAILED",{"id":"m1RDS2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.2","Outcome","SUCCESS",{"id":"m2RDS2","visible":false,"period":86400}],[{"label":"RDS.4 Failure Percentage","expression":"(m1RDS4 / (m1RDS4+m2RDS4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.4","Outcome","FAILED",{"id":"m1RDS4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.4","Outcome","SUCCESS",{"id":"m2RDS4","visible":false,"period":86400}],[{"label":"RDS.5 Failure Percentage","expression":"(m1RDS5 / (m1RDS5+m2RDS5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.5","Outcome","FAILED",{"id":"m1RDS5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.5","Outcome","SUCCESS",{"id":"m2RDS5","visible":false,"period":86400}],[{"label":"RDS.6 Failure Percentage","expression":"(m1RDS6 / (m1RDS6+m2RDS6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.6","Outcome","FAILED",{"id":"m1RDS6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.6","Outcome","SUCCESS",{"id":"m2RDS6","visible":false,"period":86400}],[{"label":"RDS.7 Failure Percentage","expression":"(m1RDS7 / (m1RDS7+m2RDS7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.7","Outcome","FAILED",{"id":"m1RDS7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.7","Outcome","SUCCESS",{"id":"m2RDS7","visible":false,"period":86400}],[{"label":"RDS.8 Failure Percentage","expression":"(m1RDS8 / (m1RDS8+m2RDS8)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.8","Outcome","FAILED",{"id":"m1RDS8","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.8","Outcome","SUCCESS",{"id":"m2RDS8","visible":false,"period":86400}],[{"label":"RDS.13 Failure Percentage","expression":"(m1RDS13 / (m1RDS13+m2RDS13)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.13","Outcome","FAILED",{"id":"m1RDS13","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.13","Outcome","SUCCESS",{"id":"m2RDS13","visible":false,"period":86400}],[{"label":"RDS.16 Failure Percentage","expression":"(m1RDS16 / (m1RDS16+m2RDS16)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.16","Outcome","FAILED",{"id":"m1RDS16","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.16","Outcome","SUCCESS",{"id":"m2RDS16","visible":false,"period":86400}],[{"label":"Redshift.1 Failure Percentage","expression":"(m1Redshift1 / (m1Redshift1+m2Redshift1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.1","Outcome","FAILED",{"id":"m1Redshift1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.1","Outcome","SUCCESS",{"id":"m2Redshift1","visible":false,"period":86400}],[{"label":"Redshift.3 Failure Percentage","expression":"(m1Redshift3 / (m1Redshift3+m2Redshift3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.3","Outcome","FAILED",{"id":"m1Redshift3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.3","Outcome","SUCCESS",{"id":"m2Redshift3","visible":false,"period":86400}],[{"label":"Redshift.4 Failure Percentage","expression":"(m1Redshift4 / (m1Redshift4+m2Redshift4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.4","Outcome","FAILED",{"id":"m1Redshift4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.4","Outcome","SUCCESS",{"id":"m2Redshift4","visible":false,"period":86400}],[{"label":"Redshift.6 Failure Percentage","expression":"(m1Redshift6 / (m1Redshift6+m2Redshift6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.6","Outcome","FAILED",{"id":"m1Redshift6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.6","Outcome","SUCCESS",{"id":"m2Redshift6","visible":false,"period":86400}],[{"label":"S3.1 Failure Percentage","expression":"(m1S31 / (m1S31+m2S31)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.1","Outcome","FAILED",{"id":"m1S31","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.1","Outcome","SUCCESS",{"id":"m2S31","visible":false,"period":86400}],[{"label":"S3.2 Failure Percentage","expression":"(m1S32 / (m1S32+m2S32)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.2","Outcome","FAILED",{"id":"m1S32","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.2","Outcome","SUCCESS",{"id":"m2S32","visible":false,"period":86400}],[{"label":"S3.3 Failure Percentage","expression":"(m1S33 / (m1S33+m2S33)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.3","Outcome","FAILED",{"id":"m1S33","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.3","Outcome","SUCCESS",{"id":"m2S33","visible":false,"period":86400}],[{"label":"S3.4 Failure Percentage","expression":"(m1S34 / (m1S34+m2S34)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.4","Outcome","FAILED",{"id":"m1S34","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.4","Outcome","SUCCESS",{"id":"m2S34","visible":false,"period":86400}],[{"label":"S3.5 Failure Percentage","expression":"(m1S35 / (m1S35+m2S35)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.5","Outcome","FAILED",{"id":"m1S35","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.5","Outcome","SUCCESS",{"id":"m2S35","visible":false,"period":86400}],[{"label":"S3.6 Failure Percentage","expression":"(m1S36 / (m1S36+m2S36)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.6","Outcome","FAILED",{"id":"m1S36","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.6","Outcome","SUCCESS",{"id":"m2S36","visible":false,"period":86400}],[{"label":"S3.8 Failure Percentage","expression":"(m1S38 / (m1S38+m2S38)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.8","Outcome","FAILED",{"id":"m1S38","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.8","Outcome","SUCCESS",{"id":"m2S38","visible":false,"period":86400}],[{"label":"S3.9 Failure Percentage","expression":"(m1S39 / (m1S39+m2S39)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.9","Outcome","FAILED",{"id":"m1S39","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.9","Outcome","SUCCESS",{"id":"m2S39","visible":false,"period":86400}],[{"label":"S3.11 Failure Percentage","expression":"(m1S311 / (m1S311+m2S311)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.11","Outcome","FAILED",{"id":"m1S311","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.11","Outcome","SUCCESS",{"id":"m2S311","visible":false,"period":86400}],[{"label":"S3.13 Failure Percentage","expression":"(m1S313 / (m1S313+m2S313)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.13","Outcome","FAILED",{"id":"m1S313","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.13","Outcome","SUCCESS",{"id":"m2S313","visible":false,"period":86400}],[{"label":"SecretsManager.1 Failure Percentage","expression":"(m1SecretsManager1 / (m1SecretsManager1+m2SecretsManager1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.1","Outcome","FAILED",{"id":"m1SecretsManager1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.1","Outcome","SUCCESS",{"id":"m2SecretsManager1","visible":false,"period":86400}],[{"label":"SecretsManager.3 Failure Percentage","expression":"(m1SecretsManager3 / (m1SecretsManager3+m2SecretsManager3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.3","Outcome","FAILED",{"id":"m1SecretsManager3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.3","Outcome","SUCCESS",{"id":"m2SecretsManager3","visible":false,"period":86400}],[{"label":"SecretsManager.4 Failure Percentage","expression":"(m1SecretsManager4 / (m1SecretsManager4+m2SecretsManager4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.4","Outcome","FAILED",{"id":"m1SecretsManager4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.4","Outcome","SUCCESS",{"id":"m2SecretsManager4","visible":false,"period":86400}],[{"label":"SNS.1 Failure Percentage","expression":"(m1SNS1 / (m1SNS1+m2SNS1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SNS.1","Outcome","FAILED",{"id":"m1SNS1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SNS.1","Outcome","SUCCESS",{"id":"m2SNS1","visible":false,"period":86400}],[{"label":"SNS.2 Failure Percentage","expression":"(m1SNS2 / (m1SNS2+m2SNS2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SNS.2","Outcome","FAILED",{"id":"m1SNS2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SNS.2","Outcome","SUCCESS",{"id":"m2SNS2","visible":false,"period":86400}],[{"label":"SQS.1 Failure Percentage","expression":"(m1SQS1 / (m1SQS1+m2SQS1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SQS.1","Outcome","FAILED",{"id":"m1SQS1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SQS.1","Outcome","SUCCESS",{"id":"m2SQS1","visible":false,"period":86400}],[{"label":"SSM.4 Failure Percentage","expression":"(m1SSM4 / (m1SSM4+m2SSM4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SSM.4","Outcome","FAILED",{"id":"m1SSM4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SSM.4","Outcome","SUCCESS",{"id":"m2SSM4","visible":false,"period":86400}],[{"label":"GuardDuty.1 Failure Percentage","expression":"(m1GuardDuty1 / (m1GuardDuty1+m2GuardDuty1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.1","Outcome","FAILED",{"id":"m1GuardDuty1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.1","Outcome","SUCCESS",{"id":"m2GuardDuty1","visible":false,"period":86400}],[{"label":"Athena.4 Failure Percentage","expression":"(m1Athena4 / (m1Athena4+m2Athena4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Athena.4","Outcome","FAILED",{"id":"m1Athena4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Athena.4","Outcome","SUCCESS",{"id":"m2Athena4","visible":false,"period":86400}],[{"label":"APIGateway.1 Failure Percentage","expression":"(m1APIGateway1 / (m1APIGateway1+m2APIGateway1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.1","Outcome","FAILED",{"id":"m1APIGateway1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.1","Outcome","SUCCESS",{"id":"m2APIGateway1","visible":false,"period":86400}],[{"label":"APIGateway.5 Failure Percentage","expression":"(m1APIGateway5 / (m1APIGateway5+m2APIGateway5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.5","Outcome","FAILED",{"id":"m1APIGateway5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.5","Outcome","SUCCESS",{"id":"m2APIGateway5","visible":false,"period":86400}],[{"label":"AutoScaling.3 Failure Percentage","expression":"(m1AutoScaling3 / (m1AutoScaling3+m2AutoScaling3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","AutoScaling.3","Outcome","FAILED",{"id":"m1AutoScaling3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","AutoScaling.3","Outcome","SUCCESS",{"id":"m2AutoScaling3","visible":false,"period":86400}],[{"label":"Autoscaling.5 Failure Percentage","expression":"(m1Autoscaling5 / (m1Autoscaling5+m2Autoscaling5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Autoscaling.5","Outcome","FAILED",{"id":"m1Autoscaling5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Autoscaling.5","Outcome","SUCCESS",{"id":"m2Autoscaling5","visible":false,"period":86400}],[{"label":"CloudWatch.16 Failure Percentage","expression":"(m1CloudWatch16 / (m1CloudWatch16+m2CloudWatch16)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.16","Outcome","FAILED",{"id":"m1CloudWatch16","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.16","Outcome","SUCCESS",{"id":"m2CloudWatch16","visible":false,"period":86400}],[{"label":"EC2.10 Failure Percentage","expression":"(m1EC210 / (m1EC210+m2EC210)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.10","Outcome","FAILED",{"id":"m1EC210","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.10","Outcome","SUCCESS",{"id":"m2EC210","visible":false,"period":86400}],[{"label":"SSM.1 Failure Percentage","expression":"(m1SSM1 / (m1SSM1+m2SSM1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SSM.1","Outcome","FAILED",{"id":"m1SSM1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SSM.1","Outcome","SUCCESS",{"id":"m2SSM1","visible":false,"period":86400}],[{"label":"GuardDuty.2 Failure Percentage","expression":"(m1GuardDuty2 / (m1GuardDuty2+m2GuardDuty2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.2","Outcome","FAILED",{"id":"m1GuardDuty2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.2","Outcome","SUCCESS",{"id":"m2GuardDuty2","visible":false,"period":86400}],[{"label":"GuardDuty.4 Failure Percentage","expression":"(m1GuardDuty4 / (m1GuardDuty4+m2GuardDuty4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.4","Outcome","FAILED",{"id":"m1GuardDuty4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.4","Outcome","SUCCESS",{"id":"m2GuardDuty4","visible":false,"period":86400}],[{"label":"Macie.1 Failure Percentage","expression":"(m1Macie1 / (m1Macie1+m2Macie1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Macie.1","Outcome","FAILED",{"id":"m1Macie1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Macie.1","Outcome","SUCCESS",{"id":"m2Macie1","visible":false,"period":86400}],[{"label":"DynamoDB.1 Failure Percentage","expression":"(m1DynamoDB1 / (m1DynamoDB1+m2DynamoDB1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.1","Outcome","FAILED",{"id":"m1DynamoDB1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.1","Outcome","SUCCESS",{"id":"m2DynamoDB1","visible":false,"period":86400}],[{"label":"DynamoDB.5 Failure Percentage","expression":"(m1DynamoDB5 / (m1DynamoDB5+m2DynamoDB5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.5","Outcome","FAILED",{"id":"m1DynamoDB5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.5","Outcome","SUCCESS",{"id":"m2DynamoDB5","visible":false,"period":86400}],[{"label":"DynamoDB.6 Failure Percentage","expression":"(m1DynamoDB6 / (m1DynamoDB6+m2DynamoDB6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.6","Outcome","FAILED",{"id":"m1DynamoDB6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.6","Outcome","SUCCESS",{"id":"m2DynamoDB6","visible":false,"period":86400}],[{"label":"ElastiCache.1 Failure Percentage","expression":"(m1ElastiCache1 / (m1ElastiCache1+m2ElastiCache1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.1","Outcome","FAILED",{"id":"m1ElastiCache1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.1","Outcome","SUCCESS",{"id":"m2ElastiCache1","visible":false,"period":86400}],[{"label":"ElastiCache.2 Failure Percentage","expression":"(m1ElastiCache2 / (m1ElastiCache2+m2ElastiCache2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.2","Outcome","FAILED",{"id":"m1ElastiCache2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.2","Outcome","SUCCESS",{"id":"m2ElastiCache2","visible":false,"period":86400}],[{"label":"ElastiCache.3 Failure Percentage","expression":"(m1ElastiCache3 / (m1ElastiCache3+m2ElastiCache3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.3","Outcome","FAILED",{"id":"m1ElastiCache3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.3","Outcome","SUCCESS",{"id":"m2ElastiCache3","visible":false,"period":86400}],[{"label":"ECS.5 Failure Percentage","expression":"(m1ECS5 / (m1ECS5+m2ECS5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ECS.5","Outcome","FAILED",{"id":"m1ECS5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ECS.5","Outcome","SUCCESS",{"id":"m2ECS5","visible":false,"period":86400}],[{"label":"ELB.1 Failure Percentage","expression":"(m1ELB1 / (m1ELB1+m2ELB1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ELB.1","Outcome","FAILED",{"id":"m1ELB1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ELB.1","Outcome","SUCCESS",{"id":"m2ELB1","visible":false,"period":86400}],[{"label":"ECR.1 Failure Percentage","expression":"(m1ECR1 / (m1ECR1+m2ECR1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ECR.1","Outcome","FAILED",{"id":"m1ECR1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ECR.1","Outcome","SUCCESS",{"id":"m2ECR1","visible":false,"period":86400}],[{"label":"SSM.7 Failure Percentage","expression":"(m1SSM7 / (m1SSM7+m2SSM7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SSM.7","Outcome","FAILED",{"id":"m1SSM7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SSM.7","Outcome","SUCCESS",{"id":"m2SSM7","visible":false,"period":86400}]],"annotations":{"horizontal":[{"value":",
+              "","metrics":[[{"label":"AutoScaling.1 Failure Percentage","expression":"(m1AutoScaling1 / (m1AutoScaling1+m2AutoScaling1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","AutoScaling.1","Outcome","FAILED",{"id":"m1AutoScaling1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","AutoScaling.1","Outcome","SUCCESS",{"id":"m2AutoScaling1","visible":false,"period":86400}],[{"label":"CloudFormation.1 Failure Percentage","expression":"(m1CloudFormation1 / (m1CloudFormation1+m2CloudFormation1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudFormation.1","Outcome","FAILED",{"id":"m1CloudFormation1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudFormation.1","Outcome","SUCCESS",{"id":"m2CloudFormation1","visible":false,"period":86400}],[{"label":"CloudFront.1 Failure Percentage","expression":"(m1CloudFront1 / (m1CloudFront1+m2CloudFront1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudFront.1","Outcome","FAILED",{"id":"m1CloudFront1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudFront.1","Outcome","SUCCESS",{"id":"m2CloudFront1","visible":false,"period":86400}],[{"label":"CloudFront.12 Failure Percentage","expression":"(m1CloudFront12 / (m1CloudFront12+m2CloudFront12)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudFront.12","Outcome","FAILED",{"id":"m1CloudFront12","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudFront.12","Outcome","SUCCESS",{"id":"m2CloudFront12","visible":false,"period":86400}],[{"label":"CloudTrail.1 Failure Percentage","expression":"(m1CloudTrail1 / (m1CloudTrail1+m2CloudTrail1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.1","Outcome","FAILED",{"id":"m1CloudTrail1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.1","Outcome","SUCCESS",{"id":"m2CloudTrail1","visible":false,"period":86400}],[{"label":"CloudTrail.2 Failure Percentage","expression":"(m1CloudTrail2 / (m1CloudTrail2+m2CloudTrail2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.2","Outcome","FAILED",{"id":"m1CloudTrail2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.2","Outcome","SUCCESS",{"id":"m2CloudTrail2","visible":false,"period":86400}],[{"label":"CloudTrail.3 Failure Percentage","expression":"(m1CloudTrail3 / (m1CloudTrail3+m2CloudTrail3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.3","Outcome","FAILED",{"id":"m1CloudTrail3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.3","Outcome","SUCCESS",{"id":"m2CloudTrail3","visible":false,"period":86400}],[{"label":"CloudTrail.4 Failure Percentage","expression":"(m1CloudTrail4 / (m1CloudTrail4+m2CloudTrail4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.4","Outcome","FAILED",{"id":"m1CloudTrail4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.4","Outcome","SUCCESS",{"id":"m2CloudTrail4","visible":false,"period":86400}],[{"label":"CloudTrail.5 Failure Percentage","expression":"(m1CloudTrail5 / (m1CloudTrail5+m2CloudTrail5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.5","Outcome","FAILED",{"id":"m1CloudTrail5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.5","Outcome","SUCCESS",{"id":"m2CloudTrail5","visible":false,"period":86400}],[{"label":"CloudTrail.6 Failure Percentage","expression":"(m1CloudTrail6 / (m1CloudTrail6+m2CloudTrail6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.6","Outcome","FAILED",{"id":"m1CloudTrail6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.6","Outcome","SUCCESS",{"id":"m2CloudTrail6","visible":false,"period":86400}],[{"label":"CloudTrail.7 Failure Percentage","expression":"(m1CloudTrail7 / (m1CloudTrail7+m2CloudTrail7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.7","Outcome","FAILED",{"id":"m1CloudTrail7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudTrail.7","Outcome","SUCCESS",{"id":"m2CloudTrail7","visible":false,"period":86400}],[{"label":"CloudWatch.1 Failure Percentage","expression":"(m1CloudWatch1 / (m1CloudWatch1+m2CloudWatch1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.1","Outcome","FAILED",{"id":"m1CloudWatch1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.1","Outcome","SUCCESS",{"id":"m2CloudWatch1","visible":false,"period":86400}],[{"label":"CloudWatch.2 Failure Percentage","expression":"(m1CloudWatch2 / (m1CloudWatch2+m2CloudWatch2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.2","Outcome","FAILED",{"id":"m1CloudWatch2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.2","Outcome","SUCCESS",{"id":"m2CloudWatch2","visible":false,"period":86400}],[{"label":"CloudWatch.3 Failure Percentage","expression":"(m1CloudWatch3 / (m1CloudWatch3+m2CloudWatch3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.3","Outcome","FAILED",{"id":"m1CloudWatch3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.3","Outcome","SUCCESS",{"id":"m2CloudWatch3","visible":false,"period":86400}],[{"label":"CloudWatch.4 Failure Percentage","expression":"(m1CloudWatch4 / (m1CloudWatch4+m2CloudWatch4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.4","Outcome","FAILED",{"id":"m1CloudWatch4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.4","Outcome","SUCCESS",{"id":"m2CloudWatch4","visible":false,"period":86400}],[{"label":"CloudWatch.5 Failure Percentage","expression":"(m1CloudWatch5 / (m1CloudWatch5+m2CloudWatch5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.5","Outcome","FAILED",{"id":"m1CloudWatch5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.5","Outcome","SUCCESS",{"id":"m2CloudWatch5","visible":false,"period":86400}],[{"label":"CloudWatch.6 Failure Percentage","expression":"(m1CloudWatch6 / (m1CloudWatch6+m2CloudWatch6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.6","Outcome","FAILED",{"id":"m1CloudWatch6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.6","Outcome","SUCCESS",{"id":"m2CloudWatch6","visible":false,"period":86400}],[{"label":"CloudWatch.7 Failure Percentage","expression":"(m1CloudWatch7 / (m1CloudWatch7+m2CloudWatch7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.7","Outcome","FAILED",{"id":"m1CloudWatch7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.7","Outcome","SUCCESS",{"id":"m2CloudWatch7","visible":false,"period":86400}],[{"label":"CloudWatch.8 Failure Percentage","expression":"(m1CloudWatch8 / (m1CloudWatch8+m2CloudWatch8)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.8","Outcome","FAILED",{"id":"m1CloudWatch8","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.8","Outcome","SUCCESS",{"id":"m2CloudWatch8","visible":false,"period":86400}],[{"label":"CloudWatch.9 Failure Percentage","expression":"(m1CloudWatch9 / (m1CloudWatch9+m2CloudWatch9)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.9","Outcome","FAILED",{"id":"m1CloudWatch9","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.9","Outcome","SUCCESS",{"id":"m2CloudWatch9","visible":false,"period":86400}],[{"label":"CloudWatch.10 Failure Percentage","expression":"(m1CloudWatch10 / (m1CloudWatch10+m2CloudWatch10)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.10","Outcome","FAILED",{"id":"m1CloudWatch10","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.10","Outcome","SUCCESS",{"id":"m2CloudWatch10","visible":false,"period":86400}],[{"label":"CloudWatch.11 Failure Percentage","expression":"(m1CloudWatch11 / (m1CloudWatch11+m2CloudWatch11)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.11","Outcome","FAILED",{"id":"m1CloudWatch11","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.11","Outcome","SUCCESS",{"id":"m2CloudWatch11","visible":false,"period":86400}],[{"label":"CloudWatch.12 Failure Percentage","expression":"(m1CloudWatch12 / (m1CloudWatch12+m2CloudWatch12)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.12","Outcome","FAILED",{"id":"m1CloudWatch12","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.12","Outcome","SUCCESS",{"id":"m2CloudWatch12","visible":false,"period":86400}],[{"label":"CloudWatch.13 Failure Percentage","expression":"(m1CloudWatch13 / (m1CloudWatch13+m2CloudWatch13)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.13","Outcome","FAILED",{"id":"m1CloudWatch13","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.13","Outcome","SUCCESS",{"id":"m2CloudWatch13","visible":false,"period":86400}],[{"label":"CloudWatch.14 Failure Percentage","expression":"(m1CloudWatch14 / (m1CloudWatch14+m2CloudWatch14)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.14","Outcome","FAILED",{"id":"m1CloudWatch14","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.14","Outcome","SUCCESS",{"id":"m2CloudWatch14","visible":false,"period":86400}],[{"label":"CodeBuild.2 Failure Percentage","expression":"(m1CodeBuild2 / (m1CodeBuild2+m2CodeBuild2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CodeBuild.2","Outcome","FAILED",{"id":"m1CodeBuild2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CodeBuild.2","Outcome","SUCCESS",{"id":"m2CodeBuild2","visible":false,"period":86400}],[{"label":"CodeBuild.5 Failure Percentage","expression":"(m1CodeBuild5 / (m1CodeBuild5+m2CodeBuild5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CodeBuild.5","Outcome","FAILED",{"id":"m1CodeBuild5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CodeBuild.5","Outcome","SUCCESS",{"id":"m2CodeBuild5","visible":false,"period":86400}],[{"label":"Config.1 Failure Percentage","expression":"(m1Config1 / (m1Config1+m2Config1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Config.1","Outcome","FAILED",{"id":"m1Config1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Config.1","Outcome","SUCCESS",{"id":"m2Config1","visible":false,"period":86400}],[{"label":"EC2.1 Failure Percentage","expression":"(m1EC21 / (m1EC21+m2EC21)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.1","Outcome","FAILED",{"id":"m1EC21","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.1","Outcome","SUCCESS",{"id":"m2EC21","visible":false,"period":86400}],[{"label":"EC2.2 Failure Percentage","expression":"(m1EC22 / (m1EC22+m2EC22)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.2","Outcome","FAILED",{"id":"m1EC22","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.2","Outcome","SUCCESS",{"id":"m2EC22","visible":false,"period":86400}],[{"label":"EC2.4 Failure Percentage","expression":"(m1EC24 / (m1EC24+m2EC24)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.4","Outcome","FAILED",{"id":"m1EC24","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.4","Outcome","SUCCESS",{"id":"m2EC24","visible":false,"period":86400}],[{"label":"EC2.6 Failure Percentage","expression":"(m1EC26 / (m1EC26+m2EC26)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.6","Outcome","FAILED",{"id":"m1EC26","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.6","Outcome","SUCCESS",{"id":"m2EC26","visible":false,"period":86400}],[{"label":"EC2.7 Failure Percentage","expression":"(m1EC27 / (m1EC27+m2EC27)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.7","Outcome","FAILED",{"id":"m1EC27","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.7","Outcome","SUCCESS",{"id":"m2EC27","visible":false,"period":86400}],[{"label":"EC2.8 Failure Percentage","expression":"(m1EC28 / (m1EC28+m2EC28)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.8","Outcome","FAILED",{"id":"m1EC28","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.8","Outcome","SUCCESS",{"id":"m2EC28","visible":false,"period":86400}],[{"label":"EC2.13 Failure Percentage","expression":"(m1EC213 / (m1EC213+m2EC213)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.13","Outcome","FAILED",{"id":"m1EC213","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.13","Outcome","SUCCESS",{"id":"m2EC213","visible":false,"period":86400}],[{"label":"EC2.14 Failure Percentage","expression":"(m1EC214 / (m1EC214+m2EC214)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.14","Outcome","FAILED",{"id":"m1EC214","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.14","Outcome","SUCCESS",{"id":"m2EC214","visible":false,"period":86400}],[{"label":"EC2.15 Failure Percentage","expression":"(m1EC215 / (m1EC215+m2EC215)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.15","Outcome","FAILED",{"id":"m1EC215","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.15","Outcome","SUCCESS",{"id":"m2EC215","visible":false,"period":86400}],[{"label":"EC2.18 Failure Percentage","expression":"(m1EC218 / (m1EC218+m2EC218)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.18","Outcome","FAILED",{"id":"m1EC218","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.18","Outcome","SUCCESS",{"id":"m2EC218","visible":false,"period":86400}],[{"label":"EC2.19 Failure Percentage","expression":"(m1EC219 / (m1EC219+m2EC219)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.19","Outcome","FAILED",{"id":"m1EC219","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.19","Outcome","SUCCESS",{"id":"m2EC219","visible":false,"period":86400}],[{"label":"EC2.23 Failure Percentage","expression":"(m1EC223 / (m1EC223+m2EC223)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.23","Outcome","FAILED",{"id":"m1EC223","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.23","Outcome","SUCCESS",{"id":"m2EC223","visible":false,"period":86400}],[{"label":"IAM.3 Failure Percentage","expression":"(m1IAM3 / (m1IAM3+m2IAM3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.3","Outcome","FAILED",{"id":"m1IAM3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.3","Outcome","SUCCESS",{"id":"m2IAM3","visible":false,"period":86400}],[{"label":"IAM.7 Failure Percentage","expression":"(m1IAM7 / (m1IAM7+m2IAM7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.7","Outcome","FAILED",{"id":"m1IAM7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.7","Outcome","SUCCESS",{"id":"m2IAM7","visible":false,"period":86400}],[{"label":"IAM.8 Failure Percentage","expression":"(m1IAM8 / (m1IAM8+m2IAM8)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.8","Outcome","FAILED",{"id":"m1IAM8","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.8","Outcome","SUCCESS",{"id":"m2IAM8","visible":false,"period":86400}],[{"label":"IAM.11 Failure Percentage","expression":"(m1IAM11 / (m1IAM11+m2IAM11)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.11","Outcome","FAILED",{"id":"m1IAM11","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.11","Outcome","SUCCESS",{"id":"m2IAM11","visible":false,"period":86400}],[{"label":"IAM.12 Failure Percentage","expression":"(m1IAM12 / (m1IAM12+m2IAM12)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.12","Outcome","FAILED",{"id":"m1IAM12","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.12","Outcome","SUCCESS",{"id":"m2IAM12","visible":false,"period":86400}],[{"label":"IAM.13 Failure Percentage","expression":"(m1IAM13 / (m1IAM13+m2IAM13)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.13","Outcome","FAILED",{"id":"m1IAM13","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.13","Outcome","SUCCESS",{"id":"m2IAM13","visible":false,"period":86400}],[{"label":"IAM.14 Failure Percentage","expression":"(m1IAM14 / (m1IAM14+m2IAM14)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.14","Outcome","FAILED",{"id":"m1IAM14","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.14","Outcome","SUCCESS",{"id":"m2IAM14","visible":false,"period":86400}],[{"label":"IAM.15 Failure Percentage","expression":"(m1IAM15 / (m1IAM15+m2IAM15)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.15","Outcome","FAILED",{"id":"m1IAM15","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.15","Outcome","SUCCESS",{"id":"m2IAM15","visible":false,"period":86400}],[{"label":"IAM.16 Failure Percentage","expression":"(m1IAM16 / (m1IAM16+m2IAM16)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.16","Outcome","FAILED",{"id":"m1IAM16","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.16","Outcome","SUCCESS",{"id":"m2IAM16","visible":false,"period":86400}],[{"label":"IAM.17 Failure Percentage","expression":"(m1IAM17 / (m1IAM17+m2IAM17)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.17","Outcome","FAILED",{"id":"m1IAM17","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.17","Outcome","SUCCESS",{"id":"m2IAM17","visible":false,"period":86400}],[{"label":"IAM.18 Failure Percentage","expression":"(m1IAM18 / (m1IAM18+m2IAM18)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.18","Outcome","FAILED",{"id":"m1IAM18","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.18","Outcome","SUCCESS",{"id":"m2IAM18","visible":false,"period":86400}],[{"label":"IAM.22 Failure Percentage","expression":"(m1IAM22 / (m1IAM22+m2IAM22)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.22","Outcome","FAILED",{"id":"m1IAM22","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.22","Outcome","SUCCESS",{"id":"m2IAM22","visible":false,"period":86400}],[{"label":"KMS.4 Failure Percentage","expression":"(m1KMS4 / (m1KMS4+m2KMS4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","KMS.4","Outcome","FAILED",{"id":"m1KMS4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","KMS.4","Outcome","SUCCESS",{"id":"m2KMS4","visible":false,"period":86400}],[{"label":"Lambda.1 Failure Percentage","expression":"(m1Lambda1 / (m1Lambda1+m2Lambda1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.1","Outcome","FAILED",{"id":"m1Lambda1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.1","Outcome","SUCCESS",{"id":"m2Lambda1","visible":false,"period":86400}],[{"label":"RDS.1 Failure Percentage","expression":"(m1RDS1 / (m1RDS1+m2RDS1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.1","Outcome","FAILED",{"id":"m1RDS1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.1","Outcome","SUCCESS",{"id":"m2RDS1","visible":false,"period":86400}],[{"label":"RDS.2 Failure Percentage","expression":"(m1RDS2 / (m1RDS2+m2RDS2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.2","Outcome","FAILED",{"id":"m1RDS2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.2","Outcome","SUCCESS",{"id":"m2RDS2","visible":false,"period":86400}],[{"label":"RDS.4 Failure Percentage","expression":"(m1RDS4 / (m1RDS4+m2RDS4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.4","Outcome","FAILED",{"id":"m1RDS4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.4","Outcome","SUCCESS",{"id":"m2RDS4","visible":false,"period":86400}],[{"label":"RDS.5 Failure Percentage","expression":"(m1RDS5 / (m1RDS5+m2RDS5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.5","Outcome","FAILED",{"id":"m1RDS5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.5","Outcome","SUCCESS",{"id":"m2RDS5","visible":false,"period":86400}],[{"label":"RDS.6 Failure Percentage","expression":"(m1RDS6 / (m1RDS6+m2RDS6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.6","Outcome","FAILED",{"id":"m1RDS6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.6","Outcome","SUCCESS",{"id":"m2RDS6","visible":false,"period":86400}],[{"label":"RDS.7 Failure Percentage","expression":"(m1RDS7 / (m1RDS7+m2RDS7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.7","Outcome","FAILED",{"id":"m1RDS7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.7","Outcome","SUCCESS",{"id":"m2RDS7","visible":false,"period":86400}],[{"label":"RDS.8 Failure Percentage","expression":"(m1RDS8 / (m1RDS8+m2RDS8)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.8","Outcome","FAILED",{"id":"m1RDS8","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.8","Outcome","SUCCESS",{"id":"m2RDS8","visible":false,"period":86400}],[{"label":"RDS.13 Failure Percentage","expression":"(m1RDS13 / (m1RDS13+m2RDS13)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.13","Outcome","FAILED",{"id":"m1RDS13","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.13","Outcome","SUCCESS",{"id":"m2RDS13","visible":false,"period":86400}],[{"label":"RDS.16 Failure Percentage","expression":"(m1RDS16 / (m1RDS16+m2RDS16)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.16","Outcome","FAILED",{"id":"m1RDS16","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.16","Outcome","SUCCESS",{"id":"m2RDS16","visible":false,"period":86400}],[{"label":"Redshift.1 Failure Percentage","expression":"(m1Redshift1 / (m1Redshift1+m2Redshift1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.1","Outcome","FAILED",{"id":"m1Redshift1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.1","Outcome","SUCCESS",{"id":"m2Redshift1","visible":false,"period":86400}],[{"label":"Redshift.3 Failure Percentage","expression":"(m1Redshift3 / (m1Redshift3+m2Redshift3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.3","Outcome","FAILED",{"id":"m1Redshift3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.3","Outcome","SUCCESS",{"id":"m2Redshift3","visible":false,"period":86400}],[{"label":"Redshift.4 Failure Percentage","expression":"(m1Redshift4 / (m1Redshift4+m2Redshift4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.4","Outcome","FAILED",{"id":"m1Redshift4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.4","Outcome","SUCCESS",{"id":"m2Redshift4","visible":false,"period":86400}],[{"label":"Redshift.6 Failure Percentage","expression":"(m1Redshift6 / (m1Redshift6+m2Redshift6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.6","Outcome","FAILED",{"id":"m1Redshift6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Redshift.6","Outcome","SUCCESS",{"id":"m2Redshift6","visible":false,"period":86400}],[{"label":"S3.1 Failure Percentage","expression":"(m1S31 / (m1S31+m2S31)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.1","Outcome","FAILED",{"id":"m1S31","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.1","Outcome","SUCCESS",{"id":"m2S31","visible":false,"period":86400}],[{"label":"S3.2 Failure Percentage","expression":"(m1S32 / (m1S32+m2S32)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.2","Outcome","FAILED",{"id":"m1S32","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.2","Outcome","SUCCESS",{"id":"m2S32","visible":false,"period":86400}],[{"label":"S3.3 Failure Percentage","expression":"(m1S33 / (m1S33+m2S33)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.3","Outcome","FAILED",{"id":"m1S33","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.3","Outcome","SUCCESS",{"id":"m2S33","visible":false,"period":86400}],[{"label":"S3.4 Failure Percentage","expression":"(m1S34 / (m1S34+m2S34)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.4","Outcome","FAILED",{"id":"m1S34","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.4","Outcome","SUCCESS",{"id":"m2S34","visible":false,"period":86400}],[{"label":"S3.5 Failure Percentage","expression":"(m1S35 / (m1S35+m2S35)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.5","Outcome","FAILED",{"id":"m1S35","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.5","Outcome","SUCCESS",{"id":"m2S35","visible":false,"period":86400}],[{"label":"S3.6 Failure Percentage","expression":"(m1S36 / (m1S36+m2S36)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.6","Outcome","FAILED",{"id":"m1S36","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.6","Outcome","SUCCESS",{"id":"m2S36","visible":false,"period":86400}],[{"label":"S3.8 Failure Percentage","expression":"(m1S38 / (m1S38+m2S38)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.8","Outcome","FAILED",{"id":"m1S38","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.8","Outcome","SUCCESS",{"id":"m2S38","visible":false,"period":86400}],[{"label":"S3.9 Failure Percentage","expression":"(m1S39 / (m1S39+m2S39)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.9","Outcome","FAILED",{"id":"m1S39","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.9","Outcome","SUCCESS",{"id":"m2S39","visible":false,"period":86400}],[{"label":"S3.11 Failure Percentage","expression":"(m1S311 / (m1S311+m2S311)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.11","Outcome","FAILED",{"id":"m1S311","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.11","Outcome","SUCCESS",{"id":"m2S311","visible":false,"period":86400}],[{"label":"S3.13 Failure Percentage","expression":"(m1S313 / (m1S313+m2S313)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.13","Outcome","FAILED",{"id":"m1S313","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.13","Outcome","SUCCESS",{"id":"m2S313","visible":false,"period":86400}],[{"label":"SecretsManager.1 Failure Percentage","expression":"(m1SecretsManager1 / (m1SecretsManager1+m2SecretsManager1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.1","Outcome","FAILED",{"id":"m1SecretsManager1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.1","Outcome","SUCCESS",{"id":"m2SecretsManager1","visible":false,"period":86400}],[{"label":"SecretsManager.3 Failure Percentage","expression":"(m1SecretsManager3 / (m1SecretsManager3+m2SecretsManager3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.3","Outcome","FAILED",{"id":"m1SecretsManager3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.3","Outcome","SUCCESS",{"id":"m2SecretsManager3","visible":false,"period":86400}],[{"label":"SecretsManager.4 Failure Percentage","expression":"(m1SecretsManager4 / (m1SecretsManager4+m2SecretsManager4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.4","Outcome","FAILED",{"id":"m1SecretsManager4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SecretsManager.4","Outcome","SUCCESS",{"id":"m2SecretsManager4","visible":false,"period":86400}],[{"label":"SNS.1 Failure Percentage","expression":"(m1SNS1 / (m1SNS1+m2SNS1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SNS.1","Outcome","FAILED",{"id":"m1SNS1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SNS.1","Outcome","SUCCESS",{"id":"m2SNS1","visible":false,"period":86400}],[{"label":"SNS.2 Failure Percentage","expression":"(m1SNS2 / (m1SNS2+m2SNS2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SNS.2","Outcome","FAILED",{"id":"m1SNS2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SNS.2","Outcome","SUCCESS",{"id":"m2SNS2","visible":false,"period":86400}],[{"label":"SQS.1 Failure Percentage","expression":"(m1SQS1 / (m1SQS1+m2SQS1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SQS.1","Outcome","FAILED",{"id":"m1SQS1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SQS.1","Outcome","SUCCESS",{"id":"m2SQS1","visible":false,"period":86400}],[{"label":"SSM.4 Failure Percentage","expression":"(m1SSM4 / (m1SSM4+m2SSM4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SSM.4","Outcome","FAILED",{"id":"m1SSM4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SSM.4","Outcome","SUCCESS",{"id":"m2SSM4","visible":false,"period":86400}],[{"label":"GuardDuty.1 Failure Percentage","expression":"(m1GuardDuty1 / (m1GuardDuty1+m2GuardDuty1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.1","Outcome","FAILED",{"id":"m1GuardDuty1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.1","Outcome","SUCCESS",{"id":"m2GuardDuty1","visible":false,"period":86400}],[{"label":"Athena.4 Failure Percentage","expression":"(m1Athena4 / (m1Athena4+m2Athena4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Athena.4","Outcome","FAILED",{"id":"m1Athena4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Athena.4","Outcome","SUCCESS",{"id":"m2Athena4","visible":false,"period":86400}],[{"label":"APIGateway.1 Failure Percentage","expression":"(m1APIGateway1 / (m1APIGateway1+m2APIGateway1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.1","Outcome","FAILED",{"id":"m1APIGateway1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.1","Outcome","SUCCESS",{"id":"m2APIGateway1","visible":false,"period":86400}],[{"label":"APIGateway.5 Failure Percentage","expression":"(m1APIGateway5 / (m1APIGateway5+m2APIGateway5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.5","Outcome","FAILED",{"id":"m1APIGateway5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.5","Outcome","SUCCESS",{"id":"m2APIGateway5","visible":false,"period":86400}],[{"label":"AutoScaling.3 Failure Percentage","expression":"(m1AutoScaling3 / (m1AutoScaling3+m2AutoScaling3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","AutoScaling.3","Outcome","FAILED",{"id":"m1AutoScaling3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","AutoScaling.3","Outcome","SUCCESS",{"id":"m2AutoScaling3","visible":false,"period":86400}],[{"label":"Autoscaling.5 Failure Percentage","expression":"(m1Autoscaling5 / (m1Autoscaling5+m2Autoscaling5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Autoscaling.5","Outcome","FAILED",{"id":"m1Autoscaling5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Autoscaling.5","Outcome","SUCCESS",{"id":"m2Autoscaling5","visible":false,"period":86400}],[{"label":"CloudWatch.16 Failure Percentage","expression":"(m1CloudWatch16 / (m1CloudWatch16+m2CloudWatch16)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.16","Outcome","FAILED",{"id":"m1CloudWatch16","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","CloudWatch.16","Outcome","SUCCESS",{"id":"m2CloudWatch16","visible":false,"period":86400}],[{"label":"EC2.10 Failure Percentage","expression":"(m1EC210 / (m1EC210+m2EC210)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.10","Outcome","FAILED",{"id":"m1EC210","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.10","Outcome","SUCCESS",{"id":"m2EC210","visible":false,"period":86400}],[{"label":"SSM.1 Failure Percentage","expression":"(m1SSM1 / (m1SSM1+m2SSM1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SSM.1","Outcome","FAILED",{"id":"m1SSM1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SSM.1","Outcome","SUCCESS",{"id":"m2SSM1","visible":false,"period":86400}],[{"label":"GuardDuty.2 Failure Percentage","expression":"(m1GuardDuty2 / (m1GuardDuty2+m2GuardDuty2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.2","Outcome","FAILED",{"id":"m1GuardDuty2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.2","Outcome","SUCCESS",{"id":"m2GuardDuty2","visible":false,"period":86400}],[{"label":"GuardDuty.4 Failure Percentage","expression":"(m1GuardDuty4 / (m1GuardDuty4+m2GuardDuty4)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.4","Outcome","FAILED",{"id":"m1GuardDuty4","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","GuardDuty.4","Outcome","SUCCESS",{"id":"m2GuardDuty4","visible":false,"period":86400}],[{"label":"Macie.1 Failure Percentage","expression":"(m1Macie1 / (m1Macie1+m2Macie1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Macie.1","Outcome","FAILED",{"id":"m1Macie1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Macie.1","Outcome","SUCCESS",{"id":"m2Macie1","visible":false,"period":86400}],[{"label":"DynamoDB.1 Failure Percentage","expression":"(m1DynamoDB1 / (m1DynamoDB1+m2DynamoDB1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.1","Outcome","FAILED",{"id":"m1DynamoDB1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.1","Outcome","SUCCESS",{"id":"m2DynamoDB1","visible":false,"period":86400}],[{"label":"DynamoDB.5 Failure Percentage","expression":"(m1DynamoDB5 / (m1DynamoDB5+m2DynamoDB5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.5","Outcome","FAILED",{"id":"m1DynamoDB5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.5","Outcome","SUCCESS",{"id":"m2DynamoDB5","visible":false,"period":86400}],[{"label":"DynamoDB.6 Failure Percentage","expression":"(m1DynamoDB6 / (m1DynamoDB6+m2DynamoDB6)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.6","Outcome","FAILED",{"id":"m1DynamoDB6","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","DynamoDB.6","Outcome","SUCCESS",{"id":"m2DynamoDB6","visible":false,"period":86400}],[{"label":"ElastiCache.1 Failure Percentage","expression":"(m1ElastiCache1 / (m1ElastiCache1+m2ElastiCache1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.1","Outcome","FAILED",{"id":"m1ElastiCache1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.1","Outcome","SUCCESS",{"id":"m2ElastiCache1","visible":false,"period":86400}],[{"label":"ElastiCache.2 Failure Percentage","expression":"(m1ElastiCache2 / (m1ElastiCache2+m2ElastiCache2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.2","Outcome","FAILED",{"id":"m1ElastiCache2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.2","Outcome","SUCCESS",{"id":"m2ElastiCache2","visible":false,"period":86400}],[{"label":"ElastiCache.3 Failure Percentage","expression":"(m1ElastiCache3 / (m1ElastiCache3+m2ElastiCache3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.3","Outcome","FAILED",{"id":"m1ElastiCache3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ElastiCache.3","Outcome","SUCCESS",{"id":"m2ElastiCache3","visible":false,"period":86400}],[{"label":"ECS.5 Failure Percentage","expression":"(m1ECS5 / (m1ECS5+m2ECS5)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ECS.5","Outcome","FAILED",{"id":"m1ECS5","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ECS.5","Outcome","SUCCESS",{"id":"m2ECS5","visible":false,"period":86400}],[{"label":"ELB.1 Failure Percentage","expression":"(m1ELB1 / (m1ELB1+m2ELB1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ELB.1","Outcome","FAILED",{"id":"m1ELB1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ELB.1","Outcome","SUCCESS",{"id":"m2ELB1","visible":false,"period":86400}],[{"label":"S3.7 Failure Percentage","expression":"(m1S37 / (m1S37+m2S37)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.7","Outcome","FAILED",{"id":"m1S37","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.7","Outcome","SUCCESS",{"id":"m2S37","visible":false,"period":86400}],[{"label":"S3.15 Failure Percentage","expression":"(m1S315 / (m1S315+m2S315)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.15","Outcome","FAILED",{"id":"m1S315","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.15","Outcome","SUCCESS",{"id":"m2S315","visible":false,"period":86400}],[{"label":"S3.20 Failure Percentage","expression":"(m1S320 / (m1S320+m2S320)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","S3.20","Outcome","FAILED",{"id":"m1S320","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","S3.20","Outcome","SUCCESS",{"id":"m2S320","visible":false,"period":86400}],[{"label":"RDS.12 Failure Percentage","expression":"(m1RDS12 / (m1RDS12+m2RDS12)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.12","Outcome","FAILED",{"id":"m1RDS12","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.12","Outcome","SUCCESS",{"id":"m2RDS12","visible":false,"period":86400}],[{"label":"RDS.23 Failure Percentage","expression":"(m1RDS23 / (m1RDS23+m2RDS23)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","RDS.23","Outcome","FAILED",{"id":"m1RDS23","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","RDS.23","Outcome","SUCCESS",{"id":"m2RDS23","visible":false,"period":86400}],[{"label":"EC2.58 Failure Percentage","expression":"(m1EC258 / (m1EC258+m2EC258)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.58","Outcome","FAILED",{"id":"m1EC258","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.58","Outcome","SUCCESS",{"id":"m2EC258","visible":false,"period":86400}],[{"label":"EC2.60 Failure Percentage","expression":"(m1EC260 / (m1EC260+m2EC260)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","EC2.60","Outcome","FAILED",{"id":"m1EC260","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","EC2.60","Outcome","SUCCESS",{"id":"m2EC260","visible":false,"period":86400}],[{"label":"IAM.2 Failure Percentage","expression":"(m1IAM2 / (m1IAM2+m2IAM2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.2","Outcome","FAILED",{"id":"m1IAM2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.2","Outcome","SUCCESS",{"id":"m2IAM2","visible":false,"period":86400}],[{"label":"IAM.19 Failure Percentage","expression":"(m1IAM19 / (m1IAM19+m2IAM19)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","IAM.19","Outcome","FAILED",{"id":"m1IAM19","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","IAM.19","Outcome","SUCCESS",{"id":"m2IAM19","visible":false,"period":86400}],[{"label":"Lambda.2 Failure Percentage","expression":"(m1Lambda2 / (m1Lambda2+m2Lambda2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.2","Outcome","FAILED",{"id":"m1Lambda2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.2","Outcome","SUCCESS",{"id":"m2Lambda2","visible":false,"period":86400}],[{"label":"Lambda.3 Failure Percentage","expression":"(m1Lambda3 / (m1Lambda3+m2Lambda3)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.3","Outcome","FAILED",{"id":"m1Lambda3","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.3","Outcome","SUCCESS",{"id":"m2Lambda3","visible":false,"period":86400}],[{"label":"Lambda.7 Failure Percentage","expression":"(m1Lambda7 / (m1Lambda7+m2Lambda7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.7","Outcome","FAILED",{"id":"m1Lambda7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","Lambda.7","Outcome","SUCCESS",{"id":"m2Lambda7","visible":false,"period":86400}],[{"label":"APIGateway.8 Failure Percentage","expression":"(m1APIGateway8 / (m1APIGateway8+m2APIGateway8)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.8","Outcome","FAILED",{"id":"m1APIGateway8","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.8","Outcome","SUCCESS",{"id":"m2APIGateway8","visible":false,"period":86400}],[{"label":"APIGateway.9 Failure Percentage","expression":"(m1APIGateway9 / (m1APIGateway9+m2APIGateway9)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.9","Outcome","FAILED",{"id":"m1APIGateway9","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","APIGateway.9","Outcome","SUCCESS",{"id":"m2APIGateway9","visible":false,"period":86400}],[{"label":"DataFirehose.1 Failure Percentage","expression":"(m1DataFirehose1 / (m1DataFirehose1+m2DataFirehose1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","DataFirehose.1","Outcome","FAILED",{"id":"m1DataFirehose1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","DataFirehose.1","Outcome","SUCCESS",{"id":"m2DataFirehose1","visible":false,"period":86400}],[{"label":"WAF.11 Failure Percentage","expression":"(m1WAF11 / (m1WAF11+m2WAF11)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","WAF.11","Outcome","FAILED",{"id":"m1WAF11","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","WAF.11","Outcome","SUCCESS",{"id":"m2WAF11","visible":false,"period":86400}],[{"label":"KMS.2 Failure Percentage","expression":"(m1KMS2 / (m1KMS2+m2KMS2)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","KMS.2","Outcome","FAILED",{"id":"m1KMS2","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","KMS.2","Outcome","SUCCESS",{"id":"m2KMS2","visible":false,"period":86400}],[{"label":"ECR.1 Failure Percentage","expression":"(m1ECR1 / (m1ECR1+m2ECR1)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","ECR.1","Outcome","FAILED",{"id":"m1ECR1","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","ECR.1","Outcome","SUCCESS",{"id":"m2ECR1","visible":false,"period":86400}],[{"label":"SSM.7 Failure Percentage","expression":"(m1SSM7 / (m1SSM7+m2SSM7)) * 100","period":86400}],["ASR","RemediationOutcome","ControlId","SSM.7","Outcome","FAILED",{"id":"m1SSM7","visible":false,"period":86400}],["ASR","RemediationOutcome","ControlId","SSM.7","Outcome","SUCCESS",{"id":"m2SSM7","visible":false,"period":86400}]],"annotations":{"horizontal":[{"value":",
               {
                 "Ref": "RemediationFailureAlarmThreshold",
               },
@@ -10377,6 +11417,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "S315remediationfailureB52F9F63": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for S3.15 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-S3.15-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1S315 / (m1S315+m2S315)) * 100",
+            "Id": "expr_1",
+            "Label": "S3.15 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1S315",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "S3.15",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2S315",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "S3.15",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "S31remediationfailureB1E0E788": {
       "Condition": "enhancedAlarmsEnabled",
       "Metadata": {
@@ -10435,6 +11555,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
                   {
                     "Name": "ControlId",
                     "Value": "S3.1",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "S320remediationfailure8F3E5392": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for S3.20 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-S3.20-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1S320 / (m1S320+m2S320)) * 100",
+            "Id": "expr_1",
+            "Label": "S3.20 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1S320",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "S3.20",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2S320",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "S3.20",
                   },
                   {
                     "Name": "Outcome",
@@ -10835,6 +12035,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
                   {
                     "Name": "ControlId",
                     "Value": "S3.6",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "S37remediationfailure2B110AD0": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for S3.7 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-S3.7-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1S37 / (m1S37+m2S37)) * 100",
+            "Id": "expr_1",
+            "Label": "S3.7 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1S37",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "S3.7",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2S37",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "S3.7",
                   },
                   {
                     "Name": "Outcome",
@@ -12957,6 +14237,86 @@ exports[`Test if the Stack has all the resources. 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "WAF11remediationfailure15A09D51": {
+      "Condition": "enhancedAlarmsEnabled",
+      "Metadata": {
+        "guard": {
+          "SuppressedRules": [
+            "CFN_NO_EXPLICIT_RESOURCE_NAMES",
+          ],
+        },
+      },
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "ASRAlarmTopic7CEFBDF9",
+          },
+        ],
+        "AlarmDescription": "This alarm triggers when the percentage of remediation failures for WAF.11 reaches above the configured threshold. 
+        This indicates that there may be a problem remediating this control ID in your AWS environment. Check the most recent failed execution of this control's runbook in the target account to identify potential issues.",
+        "AlarmName": "ASR-WAF.11-remediation-failure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "(m1WAF11 / (m1WAF11+m2WAF11)) * 100",
+            "Id": "expr_1",
+            "Label": "WAF.11 Failure Percentage",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1WAF11",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "WAF.11",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "FAILED",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2WAF11",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ControlId",
+                    "Value": "WAF.11",
+                  },
+                  {
+                    "Name": "Outcome",
+                    "Value": "SUCCESS",
+                  },
+                ],
+                "MetricName": "RemediationOutcome",
+                "Namespace": "ASR",
+              },
+              "Period": 86400,
+              "Stat": "Average",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": {
+          "Ref": "RemediationFailureAlarmThreshold",
+        },
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
     },
     "WebUINestedStackNestedStackWebUINestedStackNestedStackResourceEF0A1EDB": {
       "Condition": "webUIEnabled",

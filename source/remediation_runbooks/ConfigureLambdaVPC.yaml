@@ -1,0 +1,59 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+schemaVersion: "0.3"
+description: |
+  ### Document name - ASR-ConfigureLambdaVPC
+
+  ## What does this document do?
+    This document provides information about configuring a Lambda function to run in a VPC.
+    Note: This change may affect the function's ability to access internet resources.
+
+  ## Input Parameters
+  * AutomationAssumeRole: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+  * FunctionName: (Required) The name of the Lambda function.
+  * SubnetIds: (Required) The subnet IDs for the VPC configuration.
+  * SecurityGroupIds: (Required) The security group IDs for the VPC configuration.
+
+  ## Security Standards / Controls
+  * AWS FSBP v1.0.0: Lambda.3
+
+  ## Note
+  This control requires careful planning as it may affect internet connectivity.
+
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  AutomationAssumeRole:
+    type: String
+    description: (Required) The ARN of the role that allows Automation to perform the actions on your behalf.
+    allowedPattern: '^arn:(?:aws|aws-us-gov|aws-cn):iam::\d{12}:role/[\w+=,.@-]+$'
+  FunctionName:
+    type: String
+    description: (Required) The name of the Lambda function.
+    allowedPattern: '^[a-zA-Z0-9-_]{1,64}$'
+  SubnetIds:
+    type: StringList
+    description: (Required) The subnet IDs for the VPC configuration.
+  SecurityGroupIds:
+    type: StringList
+    description: (Required) The security group IDs for the VPC configuration.
+
+outputs:
+  - ConfigureLambdaVPC.Output
+mainSteps:
+- name: 'ConfigureLambdaVPC'
+  action: 'aws:executeScript'
+  timeoutSeconds: 600
+  inputs:
+    InputPayload:
+      function_name: '{{ FunctionName }}'
+      subnet_ids: '{{ SubnetIds }}'
+      security_group_ids: '{{ SecurityGroupIds }}'
+    Runtime: 'python3.11'
+    Handler: 'lambda_handler'
+    Script: |-
+      %%SCRIPT=configure_lambda_vpc.py%%
+  outputs:
+  - Name: 'Output'
+    Selector: '$.Payload'
+    Type: 'StringMap'
